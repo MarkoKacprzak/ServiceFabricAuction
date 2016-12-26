@@ -4,7 +4,7 @@
     <Parameter Name="Svc.Auction_MinReplicaSetSize" Value="2" />
     <Parameter Name="Svc.Auction_TargetReplicaSetSize" Value="3" />
     <Parameter Name="Svc.Auction_PartitionCount" Value="5" />
-    <Parameter Name="Svc.ApiGateway_InstanceCount" Value="-1" />
-    <Parameter Name="Svc.WebsiteType_InstanceCount" Value="-1" />
+    <Parameter Name="Svc.ApiGateway_InstanceCount" Value="1" />
+    <Parameter Name="Svc.WebsiteType_InstanceCount" Value="1" />
   </Parameters>
 </Application>
