@@ -71,7 +71,7 @@ namespace SFAuction.Svc.ApiGateway {
          // Write response to client:
          using (var response = context.Response) {
             if (output != null) {
-               response.AppendHeader("Access-Control-Allow-Origin", null);
+               response.AppendHeader("Access-Control-Allow-Origin", "http://localhost:8080");
                Byte[] outBytes = Encoding.UTF8.GetBytes(output);
                response.OutputStream.Write(outBytes, 0, outBytes.Length);
             }
@@ -86,19 +86,19 @@ namespace SFAuction.Svc.ApiGateway {
 
 
       #region Other internal helper methods
-      private async Task<String> PrimeAsync(String selfUrl, CancellationToken cancellationToken) {
-         const String imageUrl = "images/";
-         DateTime now = DateTime.UtcNow;
+      private async Task<String> PrimeAsync(string selfUrl, CancellationToken cancellationToken) {
+         const string imageUrl = "images/";
+         var now = DateTime.UtcNow;
          var proxy = new ServiceOperations(m_partitionEndpointResolver, new Uri(@"fabric:/SFAuction/AuctionSvcInstance"));
-         const String Jeff = "Jeff@Microsoft.com", Chacko = "Chacko@Microsoft.com";
+         const string jeff = "Jeff@Microsoft.com", chacko = "Chacko@Microsoft.com";
 
          try {
-            await proxy.CreateUserAsync(Jeff, cancellationToken);
+            await proxy.CreateUserAsync(jeff, cancellationToken);
          }
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Jeff,
+            await proxy.CreateItemAsync(jeff,
                "Microsoft XBox One",
                imageUrl + "xbox-one.png",
                now.AddDays(5),
@@ -107,7 +107,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Jeff,
+            await proxy.CreateItemAsync(jeff,
                   "Cushion cut diamond engagement ring set in platinum",
                   imageUrl + "diamond-ring.jpg",
                    now.AddDays(5),
@@ -116,12 +116,12 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateUserAsync(Chacko, cancellationToken);
+            await proxy.CreateUserAsync(chacko, cancellationToken);
          }
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Chacko,
+            await proxy.CreateItemAsync(chacko,
                   "Child bicycle with training wheels and basket - PINK",
                   imageUrl + "child-bicycle.jpg",
                    now.AddDays(6), // Expired
@@ -130,7 +130,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Chacko,
+            await proxy.CreateItemAsync(chacko,
                "Dining Table Set with 6 chairs - Rustic Wood",
                imageUrl + "rustic-dining-sets.jpg",
                 now.AddDays(4), // Expired
@@ -139,7 +139,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Chacko,
+            await proxy.CreateItemAsync(chacko,
                "Microsoft Lumia 950 XL Dual SIM - 32 GB ",
                imageUrl + "Lumia-950-XL-hero-jpg.jpg",
                now.AddDays(7),
@@ -148,7 +148,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Chacko,
+            await proxy.CreateItemAsync(chacko,
        "Microsoft Band 2 - Medium ",
        imageUrl + "band-2.jpg",
            now.AddHours(5),
@@ -157,7 +157,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Chacko,
+            await proxy.CreateItemAsync(chacko,
                "Contoso All Expense paid Trip to Hawaii for 2 ",
                imageUrl + "hawaii.jpg",
                 now.AddDays(10),
@@ -166,7 +166,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(Chacko,
+            await proxy.CreateItemAsync(chacko,
                   "Microsoft Surface Pro 3 256GB SSD Intel I5 1.9GHZ",
                   imageUrl + "MicrosoftSurface.jpg",
                    now.AddDays(10),

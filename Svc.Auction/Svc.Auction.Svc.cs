@@ -69,7 +69,7 @@ namespace SFAuction.Svc.Auction {
          // Write response to client:
          using (var response = context.Response) {
             if (output != null) {
-               response.AppendHeader("Access-Control-Allow-Origin", null);
+               response.AppendHeader("Access-Control-Allow-Origin", "http://localhost:8080");
                Byte[] outBytes = Encoding.UTF8.GetBytes(output);
                response.OutputStream.Write(outBytes, 0, outBytes.Length);
             }
