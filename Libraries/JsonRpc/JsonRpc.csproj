@@ -62,7 +62,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JsonRpc.cs" />
+    <Compile Include="JsonRpcError.cs" />
+    <Compile Include="JsonRpcErrorResponse.cs" />
+    <Compile Include="JsonRpcExtensions.cs" />
+    <Compile Include="JsonRpcHttpIO.cs" />
+    <Compile Include="JsonRpcMessage.cs" />
+    <Compile Include="JsonRpcPipeIO.cs" />
+    <Compile Include="JsonRpcRequest.cs" />
+    <Compile Include="JsonRpcResponse.cs" />
+    <Compile Include="JsonRpcResponseErrorException.cs" />
+    <Compile Include="JsonRpcResultResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TaskExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

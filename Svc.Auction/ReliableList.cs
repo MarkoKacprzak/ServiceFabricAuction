@@ -10,11 +10,11 @@ using System.Collections.Generic;
 namespace SFAuction.Svc.Auction {
 
    public sealed class ReliableList<TKey> where TKey : IComparable<TKey>, IEquatable<TKey> {
-      private readonly IReliableDictionary<TKey, Object> m_dictionary;
+      private readonly IReliableDictionary<TKey, object> m_dictionary;
       public static async Task<ReliableList<TKey>> CreateAsync(IReliableStateManager stateManager, string name) {
-         return new ReliableList<TKey>(await stateManager.GetOrAddAsync<IReliableDictionary<TKey, Object>>(name));
+         return new ReliableList<TKey>(await stateManager.GetOrAddAsync<IReliableDictionary<TKey, object>>(name));
       }
-      private ReliableList(IReliableDictionary<TKey, Object> dictionary) { m_dictionary = dictionary; }
+      private ReliableList(IReliableDictionary<TKey, object> dictionary) { m_dictionary = dictionary; }
 
       public Task ClearAsync(TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
                => m_dictionary.ClearAsync(timeout.DefaultToInfinite(), cancellationToken);
@@ -34,8 +34,8 @@ namespace SFAuction.Svc.Auction {
    }
 
    internal sealed class ReliableListEnumerable<TKey> : IAsyncEnumerable<TKey> {
-      private readonly IAsyncEnumerable<KeyValuePair<TKey, Object>> m_inner;
-      public ReliableListEnumerable(IAsyncEnumerable<KeyValuePair<TKey, Object>> inner) {
+      private readonly IAsyncEnumerable<KeyValuePair<TKey, object>> m_inner;
+      public ReliableListEnumerable(IAsyncEnumerable<KeyValuePair<TKey, object>> inner) {
          m_inner = inner;
       }
       public IAsyncEnumerator<TKey> GetAsyncEnumerator() =>
@@ -43,8 +43,8 @@ namespace SFAuction.Svc.Auction {
    }
 
    internal sealed class ReliableListAsyncEnumerator<TKey> : IAsyncEnumerator<TKey> {
-      private readonly IAsyncEnumerator<KeyValuePair<TKey, Object>> m_inner;
-      public ReliableListAsyncEnumerator(IAsyncEnumerator<KeyValuePair<TKey, Object>> inner) {
+      private readonly IAsyncEnumerator<KeyValuePair<TKey, object>> m_inner;
+      public ReliableListAsyncEnumerator(IAsyncEnumerator<KeyValuePair<TKey, object>> inner) {
          m_inner = inner;
       }
       public TKey Current => m_inner.Current.Key;

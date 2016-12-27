@@ -11,14 +11,14 @@ namespace SFAuction.Common {
       public override IDictionary<string, object> Serialize(object obj, JavaScriptSerializer serializer) {
          if (obj.GetType() == typeof(UserInfo)) {
             var userInfo = (UserInfo)obj;
-            return new Dictionary<string, Object> {
+            return new Dictionary<string, object> {
                   { "Email", userInfo.Email.ToString() },
                };
 
          }
          if (obj.GetType() == typeof(ItemId)) {
             var itemId = (ItemId)obj;
-            return new Dictionary<string, Object> {
+            return new Dictionary<string, object> {
                   { "Seller", itemId.Seller.ToString() },
                   { "ItemName", itemId.ItemName }
                };
@@ -26,7 +26,7 @@ namespace SFAuction.Common {
 
          if (obj.GetType() == typeof(ItemInfo)) {
             var itemInfo = (ItemInfo)obj;
-            return new Dictionary<string, Object> {
+            return new Dictionary<string, object> {
                   { "ItemId", itemInfo.ItemId },
                   { "ImageUrl", itemInfo.ImageUrl },
                   { "Expiration", itemInfo.Expiration },
@@ -36,7 +36,7 @@ namespace SFAuction.Common {
 
          var bid = obj as Bid;
          if (bid != null) {
-            return new Dictionary<string, Object> {
+            return new Dictionary<string, object> {
                   { "Bidder", bid.Bidder.ToString() },
                   { "Amount", bid.Amount},
                   { "Time", bid.Time}

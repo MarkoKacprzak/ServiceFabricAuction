@@ -15,7 +15,7 @@ namespace SFAuction.Management {
       private static void Main(string[] args) {
          //const String clusterEndpoint = "mvpconftest2.westus.cloudapp.azure.com:19000";
          //const String clusterEndpoint = "localhost:19000";
-         const string clusterEndpoint = "deintegrotestcluster.westus.cloudapp.azure.com:19000";
+         const string clusterEndpoint = "localhost:19000";
          var fc = new FabricClient(clusterEndpoint);
 
          foreach (var p in GetAllPartitionEndpointsAsync(fc, new Uri("fabric:/WordCount/WordCountService")).GetAwaiter().GetResult()) {
