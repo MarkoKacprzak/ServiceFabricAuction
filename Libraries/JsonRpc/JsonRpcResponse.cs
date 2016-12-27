@@ -18,7 +18,7 @@ namespace SFAuction.JsonRpc
             if (jsonObject.ContainsKey("result"))
             {
                 var jsonResult = Serializer.Serialize(jsonObject["result"]); // Turn .NET objects back into JSON
-                var jsonId = (string) jsonObject["id"];
+                var jsonId = jsonObject["id"] as string;
                 return (jsonId != null)
                     ? new JsonRpcResultResponse(jsonId, jsonResult)
                     : new JsonRpcResultResponse(Convert.ToInt64(jsonObject["id"]), jsonResult);
@@ -29,7 +29,7 @@ namespace SFAuction.JsonRpc
                 var error = (int) jsonObject["error"];
                 var message = (string) jsonObject["message"];
                 var data = !jsonObject.ContainsKey("data") ? null : (string) jsonObject["data"];
-                var jsonId = (string) jsonObject["id"];
+                var jsonId = jsonObject["id"] as string;
                 return (jsonId != null)
                     ? new JsonRpcErrorResponse((string) jsonObject["id"], error, message, data)
                     : new JsonRpcErrorResponse(Convert.ToInt64(jsonObject["id"]), error, message, data);

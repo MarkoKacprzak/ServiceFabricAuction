@@ -60,7 +60,7 @@ namespace SFAuction.JsonRpc
                 if (!jsonObject.ContainsKey("id"))
                     return new JsonRpcRequest(null, method, positionalParameters);
 
-                var jsonId = (string) jsonObject["id"];
+                var jsonId = jsonObject["id"] as string;
                 return (jsonId != null)
                     ? new JsonRpcRequest(jsonId, method, positionalParameters)
                     : new JsonRpcRequest(Convert.ToInt64(jsonObject["id"]), method, positionalParameters);
@@ -70,7 +70,7 @@ namespace SFAuction.JsonRpc
             if (!jsonObject.ContainsKey("id"))
                 return new JsonRpcRequest(null, method, namedParameters);
 
-            var id = (string) jsonObject["id"];
+            var id = jsonObject["id"] as string;
             return (id != null)
                 ? new JsonRpcRequest((string) jsonObject["id"], method, namedParameters)
                 : new JsonRpcRequest(Convert.ToInt64(jsonObject["id"]), method, namedParameters);
