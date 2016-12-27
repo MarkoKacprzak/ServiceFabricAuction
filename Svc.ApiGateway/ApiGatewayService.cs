@@ -21,45 +21,44 @@ namespace SFAuction.Svc.ApiGateway {
       public ApiGatewaySvc(StatelessServiceContext serviceContext) : base(serviceContext) { }
 
       #region private fields
-      private const string c_RestEndpoint = "RestEndpoint";
-      private static readonly JavaScriptSerializer s_jsSerializer = new JavaScriptSerializer();
+      private const string RestEndpoint = "RestEndpoint";
+      private static readonly JavaScriptSerializer JsSerializer = new JavaScriptSerializer();
       private static readonly Uri AuctionServiceNameUri = new Uri(@"fabric:/SFAuction/AuctionSvcInstance");
-      private static readonly HttpClient s_httpClient = new HttpClient();
-      private static readonly PartitionEndpointResolver MPartitionEndpointResolver =
-         new PartitionEndpointResolver();
-      private readonly ServiceOperations _mOperations = new ServiceOperations(MPartitionEndpointResolver, AuctionServiceNameUri);
-      private string _mSelfUrl;
+      private static readonly HttpClient HttpClient = new HttpClient();
+      private static readonly PartitionEndpointResolver PartitionEndpointResolver = new PartitionEndpointResolver();
+      private readonly ServiceOperations _mOperations = new ServiceOperations(PartitionEndpointResolver, AuctionServiceNameUri);
+      private string _selfUrl;
       private bool _firstTime = true;
-      static ApiGatewaySvc() { s_jsSerializer.RegisterConverters(new[] { new DataTypeJsonConverter() }); }
+      static ApiGatewaySvc() { JsSerializer.RegisterConverters(new[] { new DataTypeJsonConverter() }); }
       #endregion
 
       // Here I tell SF what endpoints I want my service to listen to.
       protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners() =>
-          new[] { new ServiceInstanceListener(CreateInputListener, c_RestEndpoint) };
+          new[] { new ServiceInstanceListener(CreateInputListener, RestEndpoint) };
 
       // SF calls this when I need to open my endpoint; the returned endpoint is published in the naming service
       private ICommunicationListener CreateInputListener(StatelessServiceContext context) {
-         var ep = context.CodePackageActivationContext.GetEndpoint(c_RestEndpoint);
+         var ep = context.CodePackageActivationContext.GetEndpoint(RestEndpoint);
          var listener = new HttpCommunicationListener($"{ep.Protocol}://+:{ep.Port}/Rest/", ProcessInputRequest);
-         _mSelfUrl = listener.PublishedUri;
+            _selfUrl = listener.PublishedUri;
          return listener;
       }
 
       // My endpoint listener calls this method for each client request
       private async Task ProcessInputRequest(HttpListenerContext context, CancellationToken cancelRequest) {
             string output = null;
-         if (_firstTime) { _firstTime = false; output = await PrimeAsync(_mSelfUrl, cancelRequest); }
+         if (_firstTime) { _firstTime = false; output = await PrimeAsync(_selfUrl, cancelRequest); }
          try {
             var request = context.Request;
             foreach (string key in request.QueryString) {
                     var queryValue = request.QueryString[key];
                switch (key.ToLowerInvariant()) {
                   case "prime":
-                     output = await PrimeAsync(_mSelfUrl, cancelRequest);
+                     output = await PrimeAsync(_selfUrl, cancelRequest);
                      break;
                   case "jsonrpc":   // Process request to get response:
                      var jsonRequest = JsonRpcRequest.Parse(queryValue);
-                     var jsonResponse = await jsonRequest.InvokeAsync(s_jsSerializer, _mOperations, cancelRequest);
+                     var jsonResponse = await jsonRequest.InvokeAsync(JsSerializer, _mOperations, cancelRequest);
                      output = jsonResponse.ToString();
                      break;
                }
@@ -87,7 +86,7 @@ namespace SFAuction.Svc.ApiGateway {
       private async Task<string> PrimeAsync(string selfUrl, CancellationToken cancellationToken) {
          const string imageUrl = "images/";
          var now = DateTime.UtcNow;
-         var proxy = new ServiceOperations(MPartitionEndpointResolver, new Uri(@"fabric:/SFAuction/AuctionSvcInstance"));
+         var proxy = new ServiceOperations(PartitionEndpointResolver, new Uri(@"fabric:/SFAuction/AuctionSvcInstance"));
          const string jeff = "Jeff@Microsoft.com", chacko = "Chacko@Microsoft.com";
 
          try {
