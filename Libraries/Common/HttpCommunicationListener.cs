@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Fabric;
-using System.Fabric.Description;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;

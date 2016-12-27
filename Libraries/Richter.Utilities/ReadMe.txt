@@ -18,8 +18,9 @@ var servicePartitionClient = new ServicePartitionClient<ServiceBusTopicCommunica
 //use the proxy to send a message to the Service
 servicePartitionClient.InvokeWithRetry(c => c.SendMessage(new BrokeredMessage()
 {
-	Properties =
-	{
-		{ "TestKey", "TestValue" }
-	}
+    Properties =
+
+    {
+        { "TestKey", "TestValue" }
+    }
 }));
