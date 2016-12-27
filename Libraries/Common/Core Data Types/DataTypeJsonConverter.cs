@@ -11,14 +11,14 @@ namespace SFAuction.Common {
       public override IDictionary<string, object> Serialize(object obj, JavaScriptSerializer serializer) {
          if (obj.GetType() == typeof(UserInfo)) {
             var userInfo = (UserInfo)obj;
-            return new Dictionary<String, Object> {
+            return new Dictionary<string, Object> {
                   { "Email", userInfo.Email.ToString() },
                };
 
          }
          if (obj.GetType() == typeof(ItemId)) {
-            ItemId itemId = (ItemId)obj;
-            return new Dictionary<String, Object> {
+            var itemId = (ItemId)obj;
+            return new Dictionary<string, Object> {
                   { "Seller", itemId.Seller.ToString() },
                   { "ItemName", itemId.ItemName }
                };
@@ -26,7 +26,7 @@ namespace SFAuction.Common {
 
          if (obj.GetType() == typeof(ItemInfo)) {
             var itemInfo = (ItemInfo)obj;
-            return new Dictionary<String, Object> {
+            return new Dictionary<string, Object> {
                   { "ItemId", itemInfo.ItemId },
                   { "ImageUrl", itemInfo.ImageUrl },
                   { "Expiration", itemInfo.Expiration },
@@ -34,9 +34,9 @@ namespace SFAuction.Common {
                };
          }
 
-         Bid bid = obj as Bid;
+         var bid = obj as Bid;
          if (bid != null) {
-            return new Dictionary<String, Object> {
+            return new Dictionary<string, Object> {
                   { "Bidder", bid.Bidder.ToString() },
                   { "Amount", bid.Amount},
                   { "Time", bid.Time}
@@ -46,22 +46,22 @@ namespace SFAuction.Common {
       }
       public override object Deserialize(IDictionary<string, object> dictionary, Type type, JavaScriptSerializer serializer) {
          if (type == typeof(UserInfo))
-            return new UserInfo(Email.Parse(serializer.ConvertToType<String>(dictionary["Email"])));
+            return new UserInfo(Email.Parse(serializer.ConvertToType<string>(dictionary["Email"])));
 
          if (type == typeof(ItemId))
-            return new ItemId(Email.Parse(serializer.ConvertToType<String>(dictionary["Seller"])),
-               serializer.ConvertToType<String>(dictionary["ItemName"]));
+            return new ItemId(Email.Parse(serializer.ConvertToType<string>(dictionary["Seller"])),
+               serializer.ConvertToType<string>(dictionary["ItemName"]));
 
          if (type == typeof(ItemInfo))
             return new ItemInfo(
                serializer.ConvertToType<ItemId>(dictionary["ItemId"]),
-               serializer.ConvertToType<String>(dictionary["ImageUrl"]),
+               serializer.ConvertToType<string>(dictionary["ImageUrl"]),
                serializer.ConvertToType<DateTime>(dictionary["Expiration"]),
                serializer.ConvertToType<Bid[]>(dictionary["Bids"]));
 
          if (type == typeof(Bid))
-            return new Bid(Email.Parse(serializer.ConvertToType<String>(dictionary["Bidder"])),
-               serializer.ConvertToType<Decimal>(dictionary["Amount"]),
+            return new Bid(Email.Parse(serializer.ConvertToType<string>(dictionary["Bidder"])),
+               serializer.ConvertToType<decimal>(dictionary["Amount"]),
                serializer.ConvertToType<DateTime>(dictionary["Time"]));
 
          return null;

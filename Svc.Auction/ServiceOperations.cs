@@ -12,7 +12,7 @@ using SFAuction.OperationsProxy;
 namespace SFAuction.Svc.Auction {
    internal sealed class ServiceOperations : IInternetOperations, IInternalOperations {
       #region Infrastructure
-      private const String c_endpointName = "ReplicaEndpoint";
+      private const string c_endpointName = "ReplicaEndpoint";
       private readonly Uri m_serviceNameUri;
       private readonly PartitionEndpointResolver m_partitionEndpointResolver;
 
@@ -20,9 +20,9 @@ namespace SFAuction.Svc.Auction {
          m_partitionEndpointResolver = partitionEndpointResolver;
          m_serviceNameUri = serviceNameUri;
       }
-      private InternetAuctionOperationProxy GetProxy(String email) {
+      private InternetAuctionOperationProxy GetProxy(string email) {
          // Maps email to a partition key
-         Int64 partitionKey = Email.Parse(email).PartitionKey();
+         var partitionKey = Email.Parse(email).PartitionKey();
          var resolver = m_partitionEndpointResolver.CreateSpecific(m_serviceNameUri.ToString(), partitionKey, c_endpointName);
          return new InternetAuctionOperationProxy(resolver);
       }
@@ -32,12 +32,12 @@ namespace SFAuction.Svc.Auction {
       /// This method executes on the bidder's partition.
       /// Called by web: priority 0
       /// </summary>
-      public Task<UserInfo> CreateUserAsync(String userEmail, CancellationToken cancellationToken) {
+      public Task<UserInfo> CreateUserAsync(string userEmail, CancellationToken cancellationToken) {
          var proxy = GetProxy(userEmail);
          return proxy.CreateUserAsync(userEmail, cancellationToken);
       }
 
-      public Task<UserInfo> GetUserAsync(String userEmail, CancellationToken cancellationToken) {
+      public Task<UserInfo> GetUserAsync(string userEmail, CancellationToken cancellationToken) {
          var proxy = GetProxy(userEmail);
          return proxy.GetUserAsync(userEmail, cancellationToken);
       }
@@ -46,7 +46,7 @@ namespace SFAuction.Svc.Auction {
       /// This method executes on the seller's partition.
       /// Called by web: priority 0
       /// </summary>
-      public Task<ItemInfo> CreateItemAsync(String sellerEmail, String itemName, String imageUrl, DateTime expiration, Decimal startAmount, CancellationToken cancellationToken) {
+      public Task<ItemInfo> CreateItemAsync(string sellerEmail, string itemName, string imageUrl, DateTime expiration, decimal startAmount, CancellationToken cancellationToken) {
          var proxy = GetProxy(sellerEmail);
          return proxy.CreateItemAsync(sellerEmail, itemName, imageUrl, expiration, startAmount, cancellationToken);
       }
@@ -56,7 +56,7 @@ namespace SFAuction.Svc.Auction {
       /// This method executes on the bidder's partition.
       /// Called by web: priority 0
       /// </summary>
-      public Task<Bid[]> PlaceBidAsync(String bidderEmail, String sellerEmail, String itemName, Decimal bidAmount, CancellationToken cancellationToken) {
+      public Task<Bid[]> PlaceBidAsync(string bidderEmail, string sellerEmail, string itemName, decimal bidAmount, CancellationToken cancellationToken) {
          var proxy = GetProxy(bidderEmail);
          return proxy.PlaceBidAsync(bidderEmail, sellerEmail, itemName, bidAmount, cancellationToken);
       }
@@ -67,7 +67,7 @@ namespace SFAuction.Svc.Auction {
       /// <param name="userEmail"></param>
       /// <param name="cancellationToken"></param>
       /// <returns></returns>
-      public Task<ItemInfo[]> GetItemsBiddingAsync(String userEmail, CancellationToken cancellationToken) {
+      public Task<ItemInfo[]> GetItemsBiddingAsync(string userEmail, CancellationToken cancellationToken) {
          var proxy = GetProxy(userEmail);
          return proxy.GetItemsBiddingAsync(userEmail, cancellationToken);
       }
@@ -81,7 +81,7 @@ namespace SFAuction.Svc.Auction {
       /// <param name="userEmail"></param>
       /// <param name="cancellationToken"></param>
       /// <returns></returns>
-      public Task<ItemInfo[]> GetItemsSellingAsync(String userEmail, CancellationToken cancellationToken) {
+      public Task<ItemInfo[]> GetItemsSellingAsync(string userEmail, CancellationToken cancellationToken) {
          var proxy = GetProxy(userEmail);
          return proxy.GetItemsSellingAsync(userEmail, cancellationToken);
       }
@@ -109,7 +109,7 @@ namespace SFAuction.Svc.Auction {
          }
 
          // Continue processing after every partition's auction items have come in
-         ItemInfo[][] partitionsItemInfos = await Task.WhenAll(tasks);
+         var partitionsItemInfos = await Task.WhenAll(tasks);
 
          // Combine them all together sorting them by expiration
          var results = (from partitionItemInfos in partitionsItemInfos
@@ -121,7 +121,7 @@ namespace SFAuction.Svc.Auction {
       }
 
       Task<Bid[]> IInternalOperations.PlaceBid2Async(string bidderEmail, string sellerEmail, string itemName, decimal bidAmount, CancellationToken cancellationToken) {
-         Int64 partitionKey = Email.Parse(sellerEmail).PartitionKey();
+         var partitionKey = Email.Parse(sellerEmail).PartitionKey();
          var resolver = m_partitionEndpointResolver.CreateSpecific(m_serviceNameUri.ToString(), partitionKey, c_endpointName);
          return new InternalAuctionOperationProxy(resolver).PlaceBid2Async(bidderEmail, sellerEmail, itemName, bidAmount, cancellationToken);
       }

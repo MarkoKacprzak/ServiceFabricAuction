@@ -11,91 +11,91 @@ using Microsoft.ServiceFabric.Services.Client;
 
 namespace Richter.Utilities {
    public sealed class ServicePartitionEndpointResolverDelete {
-      private readonly ServicePartitionResolver m_spr;
+      private readonly ServicePartitionResolver _mSpr;
       public readonly Uri ServiceName;
-      public readonly String EndpointName;
+      public readonly string EndpointName;
       public readonly ServicePartitionKey PartitionKey;
-      private ResolvedServicePartition m_rsp = null;
-      private String m_endpoint = null;
-      public ServicePartitionEndpointResolverDelete(ServicePartitionResolver resolver, Uri serviceName, String endpointName, ServicePartitionKey partitionKey) {
-         m_spr = resolver;
+      private ResolvedServicePartition _mRsp = null;
+      private string _mEndpoint = null;
+      public ServicePartitionEndpointResolverDelete(ServicePartitionResolver resolver, Uri serviceName, string endpointName, ServicePartitionKey partitionKey) {
+         _mSpr = resolver;
          ServiceName = serviceName;
          EndpointName = endpointName;
          PartitionKey = partitionKey;
       }
 
-      public async Task<TResult> ResolveAsync<TResult>(CancellationToken cancellationToken, Func<String, CancellationToken, Task<TResult>> func) {
-         if (m_rsp == null) {
+      public async Task<TResult> ResolveAsync<TResult>(CancellationToken cancellationToken, Func<string, CancellationToken, Task<TResult>> func) {
+         if (_mRsp == null) {
             // Get endpoints from naming service; https://msdn.microsoft.com/en-us/library/azure/dn707638.aspx
-            m_rsp = await m_spr.ResolveAsync(ServiceName, PartitionKey, cancellationToken);
+            _mRsp = await _mSpr.ResolveAsync(ServiceName, PartitionKey, cancellationToken);
          }
          for (;;) {
             try {
-               if (m_endpoint == null) m_endpoint = DeserializeEndpoints(m_rsp.GetEndpoint())[EndpointName];
-               return await func(m_endpoint, cancellationToken);
+               if (_mEndpoint == null) _mEndpoint = DeserializeEndpoints(_mRsp.GetEndpoint())[EndpointName];
+               return await func(_mEndpoint, cancellationToken);
             }
             catch (HttpRequestException ex) when ((ex.InnerException as WebException)?.Status == WebExceptionStatus.ConnectFailure) {
-               m_rsp = await m_spr.ResolveAsync(m_rsp, cancellationToken);
-               m_endpoint = null; // Retry after getting the latest endpoints from naming service
+               _mRsp = await _mSpr.ResolveAsync(_mRsp, cancellationToken);
+               _mEndpoint = null; // Retry after getting the latest endpoints from naming service
             }
          }
       }
 
       private static readonly JavaScriptSerializer s_javaScriptSerializer = new JavaScriptSerializer();
       private sealed class EndpointsCollection {
-         public Dictionary<String, String> Endpoints = null;
+         public Dictionary<string, string> Endpoints = null;
       }
-      private static IReadOnlyDictionary<String, String> DeserializeEndpoints(ResolvedServiceEndpoint partitionEndpoint) {
+      private static IReadOnlyDictionary<string, string> DeserializeEndpoints(ResolvedServiceEndpoint partitionEndpoint) {
          return s_javaScriptSerializer.Deserialize<EndpointsCollection>(partitionEndpoint.Address).Endpoints;
       }
    }
 
    public static class ServiceFabricExtensions {
-      public static EndpointResourceDescription GetEndpointResourceDescription(this ServiceContext context, String endpointName)
+      public static EndpointResourceDescription GetEndpointResourceDescription(this ServiceContext context, string endpointName)
             => context.CodePackageActivationContext.GetEndpoint(endpointName);
 
-      public static String CalcUriSuffix(this StatelessServiceContext context)
+      public static string CalcUriSuffix(this StatelessServiceContext context)
          => context.CalcUriSuffix(context.InstanceId);
 
-      public static String CalcUriSuffix(this StatefulServiceContext context)
+      public static string CalcUriSuffix(this StatefulServiceContext context)
          => context.CalcUriSuffix(context.ReplicaId);
 
-      private static String CalcUriSuffix(this ServiceContext context, Int64 instanceOrReplicaId)
+      private static string CalcUriSuffix(this ServiceContext context, long instanceOrReplicaId)
          => $"{context.PartitionId}/{instanceOrReplicaId}" +
             $"/{Guid.NewGuid().ToByteArray().ToBase32String()}/";   // Uniqueness
 
       private static readonly JavaScriptSerializer s_javaScriptSerializer = new JavaScriptSerializer();
       private sealed class EndpointsCollection {
-         public Dictionary<String, String> Endpoints = null;
+         public Dictionary<string, string> Endpoints = null;
       }
 
-      public static async Task<String> ResolveEndpointAsync(this ServicePartitionResolver resolver, Uri namedService, ServicePartitionKey partitionKey, String endpointName, CancellationToken cancellationToken) {
-         ResolvedServicePartition partition = await resolver.ResolveAsync(namedService, partitionKey, cancellationToken);
+      public static async Task<string> ResolveEndpointAsync(this ServicePartitionResolver resolver, Uri namedService, ServicePartitionKey partitionKey, string endpointName, CancellationToken cancellationToken) {
+         var partition = await resolver.ResolveAsync(namedService, partitionKey, cancellationToken);
          return DeserializeEndpoints(partition.GetEndpoint())[endpointName];
       }
 
 
-      public static async Task<IReadOnlyDictionary<String, String>> ResolveEndpointsAsync(this ServicePartitionResolver resolver, Uri namedService, ServicePartitionKey partitionKey, CancellationToken cancellationToken) {
-         ResolvedServicePartition partition = await resolver.ResolveAsync(namedService, partitionKey, cancellationToken);
+      public static async Task<IReadOnlyDictionary<string, string>> ResolveEndpointsAsync(this ServicePartitionResolver resolver, Uri namedService, ServicePartitionKey partitionKey, CancellationToken cancellationToken) {
+         var partition = await resolver.ResolveAsync(namedService, partitionKey, cancellationToken);
          return DeserializeEndpoints(partition.GetEndpoint());
       }
 
-      private static IReadOnlyDictionary<String, String> DeserializeEndpoints(ResolvedServiceEndpoint partitionEndpoint) {
+      private static IReadOnlyDictionary<string, string> DeserializeEndpoints(ResolvedServiceEndpoint partitionEndpoint) {
          return s_javaScriptSerializer.Deserialize<EndpointsCollection>(partitionEndpoint.Address).Endpoints;
       }
    }
 
    public sealed class PartitionEndpointResolverX {
       public readonly Uri ServiceName;
-      public readonly String EndpointName;
+      public readonly string EndpointName;
       private static readonly ServicePartitionResolver s_servicePartitionResolver
          = ServicePartitionResolver.GetDefault();
 
-      public PartitionEndpointResolverX(Uri serviceName, String endpointName) {
+      public PartitionEndpointResolverX(Uri serviceName, string endpointName) {
          ServiceName = serviceName;
          EndpointName = endpointName;
       }
-      public Task<String> ResolveEndpointAsync(ServicePartitionKey partitionKey, CancellationToken cancellationToken) {
+      public Task<string> ResolveEndpointAsync(ServicePartitionKey partitionKey, CancellationToken cancellationToken) {
          return s_servicePartitionResolver.ResolveEndpointAsync(ServiceName, partitionKey, EndpointName, cancellationToken);
       }
    }

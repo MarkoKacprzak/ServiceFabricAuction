@@ -44,9 +44,9 @@ namespace SFAuction.Svc.Auction {
       /// This method executes on the bidder's partition.
       /// Called by web: priority 0
       /// </summary>
-      public async Task<UserInfo> CreateUserAsync(String userEmail, CancellationToken cancellationToken) {
+      public async Task<UserInfo> CreateUserAsync(string userEmail, CancellationToken cancellationToken) {
          // Create user and add to dictionary; fail if user already exists
-         Email _userEmail = Email.Parse(userEmail);
+         var _userEmail = Email.Parse(userEmail);
          using (var tx = CreateTransaction()) {
             var userInfo = new UserInfo(_userEmail);
             try {
@@ -60,8 +60,8 @@ namespace SFAuction.Svc.Auction {
          }
       }
 
-      public async Task<UserInfo> GetUserAsync(String userEmail, CancellationToken cancellationToken) {
-         Email _userEmail = Email.Parse(userEmail);
+      public async Task<UserInfo> GetUserAsync(string userEmail, CancellationToken cancellationToken) {
+         var _userEmail = Email.Parse(userEmail);
          using (var tx = CreateTransaction()) {
             var userInfo = await m_users.TryGetValueAsync(tx, _userEmail);
             if (userInfo.HasValue) return userInfo.Value;
@@ -73,21 +73,21 @@ namespace SFAuction.Svc.Auction {
       /// This method executes on the bidder's partition.
       /// Called by web: priority 0
       /// </summary>
-      public async Task<ItemInfo> CreateItemAsync(String sellerEmail, String itemName, String imageUrl, DateTime expiration, Decimal startAmount, CancellationToken cancellationToken) {
+      public async Task<ItemInfo> CreateItemAsync(string sellerEmail, string itemName, string imageUrl, DateTime expiration, decimal startAmount, CancellationToken cancellationToken) {
          // NOTE: If items gets large, old item value (but not key) can move to warm storage
 
          // If user exists, create item & transactionally and it to user's items dictionary & unexpired items dictionary
-         Email _sellerEmail = Email.Parse(sellerEmail);
+         var _sellerEmail = Email.Parse(sellerEmail);
          using (var tx = CreateTransaction()) {
             var cr = await m_users.TryGetValueAsync(tx, _sellerEmail);
             if (!cr.HasValue)
                throw new InvalidOperationException($"Seller '{_sellerEmail}' doesn't exist.");
 
             // Look up user's (seller's) auction item dictionary & add the new item to it:
-            IReliableDictionary<ItemId, ItemInfo> userItems = await GetSellerItemsAsync(_sellerEmail);
+            var userItems = await GetSellerItemsAsync(_sellerEmail);
 
-            ItemId itemId = ItemId.Parse(_sellerEmail, itemName);
-            ItemInfo item = new ItemInfo(itemId, imageUrl, expiration, new[] { new Bid(_sellerEmail, startAmount) });   // Seller places first bid
+            var itemId = ItemId.Parse(_sellerEmail, itemName);
+            var item = new ItemInfo(itemId, imageUrl, expiration, new[] { new Bid(_sellerEmail, startAmount) });   // Seller places first bid
             try {
                await userItems.AddAsync(tx, itemId, item); // TODO: If already exists
             }
@@ -105,17 +105,17 @@ namespace SFAuction.Svc.Auction {
       /// This method executes on the bidder's partition.
       /// Called by web: priority 0
       /// </summary>
-      public async Task<Bid[]> PlaceBidAsync(String bidderEmail, String sellerEmail, String itemName, Decimal bidAmount, CancellationToken ct) {
-         Email _sellerEmail = Email.Parse(sellerEmail);
+      public async Task<Bid[]> PlaceBidAsync(string bidderEmail, string sellerEmail, string itemName, decimal bidAmount, CancellationToken ct) {
+         var _sellerEmail = Email.Parse(sellerEmail);
          using (var tx = CreateTransaction()) {
-            Email _bidderEmail = Email.Parse(bidderEmail);
-            ItemId itemId = ItemId.Parse(_sellerEmail, itemName);
+            var _bidderEmail = Email.Parse(bidderEmail);
+            var itemId = ItemId.Parse(_sellerEmail, itemName);
 
             var cr = await m_users.TryGetValueAsync(tx, _bidderEmail);
             if (!cr.HasValue) throw new InvalidOperationException($"Bidder '{_bidderEmail}' doesn't exist.");
 
             // Create new User object identical to current with new itemId added to it (if not already in collection [idempotent])
-            UserInfo userInfo = cr.Value;
+            var userInfo = cr.Value;
             if (!userInfo.ItemsBidding.Contains(itemId)) {
                userInfo = userInfo.AddItemBidding(itemId);
                await m_users.SetAsync(tx, _bidderEmail, userInfo);
@@ -134,13 +134,13 @@ namespace SFAuction.Svc.Auction {
       /// This method executes on the seller's partition. This method is only ever called by PlaceBidAsync; not via Internet
       /// Not called by web at all
       /// </summary>
-      public async Task<Bid[]> PlaceBid2Async(String bidderEmail, String sellerEmail, String itemName, Decimal bidAmount, CancellationToken ct) {
+      public async Task<Bid[]> PlaceBid2Async(string bidderEmail, string sellerEmail, string itemName, decimal bidAmount, CancellationToken ct) {
          // This method executes on the seller's partition
-         Email _sellerEmail = Email.Parse(sellerEmail);
+         var _sellerEmail = Email.Parse(sellerEmail);
          using (var tx = CreateTransaction()) {
-            Email _bidderEmail = Email.Parse(bidderEmail);
-            ItemId itemId = ItemId.Parse(_sellerEmail, itemName);
-            Boolean isUnexpiredItem = await m_unexpiredItems.ContainsAsync(tx, itemId);
+            var _bidderEmail = Email.Parse(bidderEmail);
+            var itemId = ItemId.Parse(_sellerEmail, itemName);
+                var isUnexpiredItem = await m_unexpiredItems.ContainsAsync(tx, itemId);
             if (!isUnexpiredItem)
                throw new InvalidOperationException("Item's auction expired or item doesn't exist.");
 
@@ -171,7 +171,7 @@ namespace SFAuction.Svc.Auction {
       /// <param name="userEmail"></param>
       /// <param name="cancellationToken"></param>
       /// <returns></returns>
-      public Task<ItemInfo[]> GetItemsBiddingAsync(String userEmail, CancellationToken cancellationToken) {
+      public Task<ItemInfo[]> GetItemsBiddingAsync(string userEmail, CancellationToken cancellationToken) {
          // If user doesn’t exist, fail
          // For each item bidding, look up item & return bids
          // Note: user may not have a bid due to network failure or bid didn’t pass tests
@@ -187,7 +187,7 @@ namespace SFAuction.Svc.Auction {
       /// <param name="userEmail"></param>
       /// <param name="cancellationToken"></param>
       /// <returns></returns>
-      public Task<ItemInfo[]> GetItemsSellingAsync(String userEmail, CancellationToken cancellationToken) {
+      public Task<ItemInfo[]> GetItemsSellingAsync(string userEmail, CancellationToken cancellationToken) {
          // If user doesn’t exist, fail
          // For each item in per-user dictionary, return items
          return null;
@@ -207,9 +207,9 @@ namespace SFAuction.Svc.Auction {
             var unexpiredItems = await m_unexpiredItems.CreateEnumerableAsync(tx);
             using (var enumerator = unexpiredItems.GetAsyncEnumerator()) {
                while (await enumerator.MoveNextAsync(cancellationToken)) {
-                  ItemId itemId = enumerator.Current;
-                  IReliableDictionary<ItemId, ItemInfo> sellerItems = await GetSellerItemsAsync(itemId.Seller);
-                  ConditionalValue<ItemInfo> cr = await sellerItems.TryGetValueAsync(tx, itemId);
+                  var itemId = enumerator.Current;
+                  var sellerItems = await GetSellerItemsAsync(itemId.Seller);
+                  var cr = await sellerItems.TryGetValueAsync(tx, itemId);
                   if (cr.HasValue && cr.Value.Expiration > DateTime.UtcNow)
                      itemInfos.Add(cr.Value);
                }

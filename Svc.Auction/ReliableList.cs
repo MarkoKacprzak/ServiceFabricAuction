@@ -11,7 +11,7 @@ namespace SFAuction.Svc.Auction {
 
    public sealed class ReliableList<TKey> where TKey : IComparable<TKey>, IEquatable<TKey> {
       private readonly IReliableDictionary<TKey, Object> m_dictionary;
-      public static async Task<ReliableList<TKey>> CreateAsync(IReliableStateManager stateManager, String name) {
+      public static async Task<ReliableList<TKey>> CreateAsync(IReliableStateManager stateManager, string name) {
          return new ReliableList<TKey>(await stateManager.GetOrAddAsync<IReliableDictionary<TKey, Object>>(name));
       }
       private ReliableList(IReliableDictionary<TKey, Object> dictionary) { m_dictionary = dictionary; }
@@ -27,8 +27,8 @@ namespace SFAuction.Svc.Auction {
          => m_dictionary.TryAddAsync(tx, key, null, timeout.DefaultToInfinite(), cancellationToken);
       public Task TryRemoveAsync(ITransaction tx, TKey key, TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
                => m_dictionary.TryRemoveAsync(tx, key, timeout.DefaultToInfinite(), cancellationToken);
-      public async Task<IAsyncEnumerable<TKey>> CreateEnumerableAsync(ITransaction tx, EnumerationMode enumerationMode = EnumerationMode.Unordered, Func<TKey, Boolean> filter = null) {
-         IAsyncEnumerable<KeyValuePair<TKey, Object>> enumerable = await m_dictionary.CreateEnumerableAsync(tx, filter ?? (k => true), enumerationMode);
+      public async Task<IAsyncEnumerable<TKey>> CreateEnumerableAsync(ITransaction tx, EnumerationMode enumerationMode = EnumerationMode.Unordered, Func<TKey, bool> filter = null) {
+         var enumerable = await m_dictionary.CreateEnumerableAsync(tx, filter ?? (k => true), enumerationMode);
          return new ReliableListEnumerable<TKey>(enumerable);
       }
    }

@@ -7,28 +7,28 @@ using System.Threading.Tasks;
 
 namespace Richter.Utilities {
    public sealed class CircuitBreakerHttpMessageHandler : DelegatingHandler {
-      private readonly Int32 m_failuresToOpen;
+      private readonly int m_failuresToOpen;
       private readonly TimeSpan m_timeToStayOpen;
 
-      private const Int32 c_evictionScanFrequency = 100;
+      private const int c_evictionScanFrequency = 100;
       private readonly TimeSpan m_evictionStaleTime = TimeSpan.FromMinutes(1);
-      private Int32 m_evictionScan = 0;    // 0 to c_evictionScanFrequency-1
+      private int m_evictionScan = 0;    // 0 to c_evictionScanFrequency-1
       private readonly SortedList<Uri, UriCircuitBreaker> m_pool =
          new SortedList<Uri, UriCircuitBreaker>(new UriComparer());
 
       private sealed class UriCircuitBreaker {
-         private Int32 m_failureCount = 0;
+         private int m_failureCount = 0;
          public DateTime LastAttempt = DateTime.UtcNow;
 
          public UriCircuitBreaker() { }
-         public void ThrowIfOpen(Int32 failuresToOpen, TimeSpan timetoStayOpen) {
+         public void ThrowIfOpen(int failuresToOpen, TimeSpan timetoStayOpen) {
             lock (this) {
                if (m_failureCount < failuresToOpen) return;
                if (LastAttempt.Add(timetoStayOpen) < DateTime.UtcNow) return;
                throw new InvalidOperationException();
             }
          }
-         public void ReportAttempt(Boolean succeeded, Int32 failuresToOpen) {
+         public void ReportAttempt(bool succeeded, int failuresToOpen) {
             lock (this) {
                LastAttempt = DateTime.UtcNow;
                if (succeeded) m_failureCount = 0; // Successful call, reset count
@@ -42,7 +42,7 @@ namespace Richter.Utilities {
          }
       }
 
-      public CircuitBreakerHttpMessageHandler(Int32 failuresToOpen, TimeSpan timeToStayOpen, HttpMessageHandler innerHandler = null) : base(innerHandler ?? new HttpClientHandler()) {
+      public CircuitBreakerHttpMessageHandler(int failuresToOpen, TimeSpan timeToStayOpen, HttpMessageHandler innerHandler = null) : base(innerHandler ?? new HttpClientHandler()) {
          m_failuresToOpen = failuresToOpen;
          m_timeToStayOpen = timeToStayOpen;
       }
@@ -50,11 +50,11 @@ namespace Richter.Utilities {
       protected override void Dispose(bool disposing) => base.Dispose(disposing);
 
       protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
-         UriCircuitBreaker ucb = GetCircuitBreaker(request.RequestUri);
+         var ucb = GetCircuitBreaker(request.RequestUri);
          ucb.ThrowIfOpen(m_failuresToOpen, m_timeToStayOpen);
          // If we get here, we're closed
          try {
-            HttpResponseMessage t = await base.SendAsync(request, cancellationToken);
+            var t = await base.SendAsync(request, cancellationToken);
             ucb.ReportAttempt(t.IsSuccessStatusCode, m_failuresToOpen);
             return t;
          }

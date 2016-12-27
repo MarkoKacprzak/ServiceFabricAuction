@@ -13,7 +13,6 @@ using Microsoft.ServiceFabric.Services.Runtime;
 using Richter.Utilities;
 using SFAuction.Common;
 using SFAuction.JsonRpc;
-using SFAuction.OperationsProxy;
 using SFAuction.Svc.Auction;
 
 namespace SFAuction.Svc.ApiGateway {
@@ -22,15 +21,15 @@ namespace SFAuction.Svc.ApiGateway {
       public ApiGatewaySvc(StatelessServiceContext serviceContext) : base(serviceContext) { }
 
       #region private fields
-      private const String c_RestEndpoint = "RestEndpoint";
+      private const string c_RestEndpoint = "RestEndpoint";
       private static readonly JavaScriptSerializer s_jsSerializer = new JavaScriptSerializer();
       private static readonly Uri AuctionServiceNameUri = new Uri(@"fabric:/SFAuction/AuctionSvcInstance");
       private static readonly HttpClient s_httpClient = new HttpClient();
       private static readonly PartitionEndpointResolver m_partitionEndpointResolver =
          new PartitionEndpointResolver();
       private readonly ServiceOperations m_operations = new ServiceOperations(m_partitionEndpointResolver, AuctionServiceNameUri);
-      private String m_selfUrl;
-      private Boolean firstTime = true;
+      private string m_selfUrl;
+      private bool firstTime = true;
       static ApiGatewaySvc() { s_jsSerializer.RegisterConverters(new[] { new DataTypeJsonConverter() }); }
       #endregion
 
@@ -49,19 +48,19 @@ namespace SFAuction.Svc.ApiGateway {
 
       // My endpoint listener calls this method for each client request
       private async Task ProcessInputRequest(HttpListenerContext context, CancellationToken cancelRequest) {
-         String output = null;
+            string output = null;
          if (firstTime) { firstTime = false; output = await PrimeAsync(m_selfUrl, cancelRequest); }
          try {
-            HttpListenerRequest request = context.Request;
-            foreach (String key in request.QueryString) {
-               String queryValue = request.QueryString[key];
+            var request = context.Request;
+            foreach (string key in request.QueryString) {
+                    var queryValue = request.QueryString[key];
                switch (key.ToLowerInvariant()) {
                   case "prime":
                      output = await PrimeAsync(m_selfUrl, cancelRequest);
                      break;
                   case "jsonrpc":   // Process request to get response:
-                     JsonRpcRequest jsonRequest = JsonRpcRequest.Parse(queryValue);
-                     JsonRpcResponse jsonResponse = await jsonRequest.InvokeAsync(s_jsSerializer, m_operations, cancelRequest);
+                     var jsonRequest = JsonRpcRequest.Parse(queryValue);
+                     var jsonResponse = await jsonRequest.InvokeAsync(s_jsSerializer, m_operations, cancelRequest);
                      output = jsonResponse.ToString();
                      break;
                }
@@ -72,7 +71,7 @@ namespace SFAuction.Svc.ApiGateway {
          using (var response = context.Response) {
             if (output != null) {
                response.AppendHeader("Access-Control-Allow-Origin", "http://localhost:8080");
-               Byte[] outBytes = Encoding.UTF8.GetBytes(output);
+               var outBytes = Encoding.UTF8.GetBytes(output);
                response.OutputStream.Write(outBytes, 0, outBytes.Length);
             }
          }
@@ -86,7 +85,7 @@ namespace SFAuction.Svc.ApiGateway {
 
 
       #region Other internal helper methods
-      private async Task<String> PrimeAsync(string selfUrl, CancellationToken cancellationToken) {
+      private async Task<string> PrimeAsync(string selfUrl, CancellationToken cancellationToken) {
          const string imageUrl = "images/";
          var now = DateTime.UtcNow;
          var proxy = new ServiceOperations(m_partitionEndpointResolver, new Uri(@"fabric:/SFAuction/AuctionSvcInstance"));

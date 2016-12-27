@@ -13,19 +13,19 @@ namespace Richter.Utilities {
       private static readonly JavaScriptSerializer s_javaScriptSerializer = new JavaScriptSerializer();
 
       private readonly HttpClient m_httpClient;
-      private readonly String m_clusterEndpoint;
+      private readonly string m_clusterEndpoint;
       private readonly Cache<PartitionInfo> m_clusterPartitionEndpointCache;
 
       private sealed class PartitionInfo {
-         public PartitionInfo(String previousRspVersion, IDictionary<String, String> endpoints) {
+         public PartitionInfo(string previousRspVersion, IDictionary<string, string> endpoints) {
             PreviousRspVersion = previousRspVersion;
-            Endpoints = new ReadOnlyDictionary<String, String>(endpoints);
+            Endpoints = new ReadOnlyDictionary<string, string>(endpoints);
          }
-         public readonly String PreviousRspVersion;
-         public readonly IReadOnlyDictionary<String, String> Endpoints;
+         public readonly string PreviousRspVersion;
+         public readonly IReadOnlyDictionary<string, string> Endpoints;
       }
 
-      public PartitionEndpointResolver(String clusterEndpoint = "localhost", TimeSpan endpointTtl = default(TimeSpan), HttpClient httpClient = null) {
+      public PartitionEndpointResolver(string clusterEndpoint = "localhost", TimeSpan endpointTtl = default(TimeSpan), HttpClient httpClient = null) {
          m_httpClient = httpClient ?? new HttpClient();
          m_clusterEndpoint = clusterEndpoint;
          endpointTtl = (endpointTtl == default(TimeSpan)) ? TimeSpan.FromMinutes(5) : endpointTtl;
@@ -33,48 +33,48 @@ namespace Richter.Utilities {
       }
       public void Dispose() => m_clusterPartitionEndpointCache.Dispose();
 
-      private async Task<PartitionInfo> ResolvePartitionEndpointsAsync(String serviceName, Int64? partitionKey, String previousRspVersion, CancellationToken cancellationToken = default(CancellationToken)) {
-         serviceName = serviceName.Replace("fabric:/", String.Empty);
+      private async Task<PartitionInfo> ResolvePartitionEndpointsAsync(string serviceName, long? partitionKey, string previousRspVersion, CancellationToken cancellationToken = default(CancellationToken)) {
+         serviceName = serviceName.Replace("fabric:/", string.Empty);
 
-         String uri = $"http://{m_clusterEndpoint}:19080/Services/{serviceName}/$/ResolvePartition?api-version=1.0";
+            string uri = $"http://{m_clusterEndpoint}:19080/Services/{serviceName}/$/ResolvePartition?api-version=1.0";
          if (partitionKey != null)
             uri += $"&PartitionKeyType=2&PartitionKeyValue={partitionKey.Value}";
          if (previousRspVersion != null)
             uri += $"&PreviousRspVersion={previousRspVersion}";
 
-         String partitionJson = await m_httpClient.GetStringAsync(new Uri(uri)); // Fix to take CancellationToken
-         IDictionary<String, Object> partitionObject = (IDictionary<String, Object>)s_javaScriptSerializer.DeserializeObject(partitionJson);
-         previousRspVersion = (String)partitionObject["Version"];
+         var partitionJson = await m_httpClient.GetStringAsync(new Uri(uri)); // Fix to take CancellationToken
+         var partitionObject = (IDictionary<string, object>)s_javaScriptSerializer.DeserializeObject(partitionJson);
+         previousRspVersion = (string)partitionObject["Version"];
 
-         String partitionAddress = (String)
-            ((IDictionary<String, Object>)((Object[])partitionObject["Endpoints"])[0])["Address"];
+         var partitionAddress = (string)
+            ((IDictionary<string, object>)((object[])partitionObject["Endpoints"])[0])["Address"];
 
-         IDictionary<String, String> partitionEndpoints =
+         IDictionary<string, string> partitionEndpoints =
             s_javaScriptSerializer.Deserialize<EndpointsCollection>(partitionAddress).Endpoints;
          return new PartitionInfo(previousRspVersion, partitionEndpoints);
       }
       private sealed class EndpointsCollection {
-         public Dictionary<String, String> Endpoints = null;
+         public Dictionary<string, string> Endpoints = null;
       }
 
-      public Resolver CreateSpecific(String serviceName, Int64 partitionKey, String endpointName)
+      public Resolver CreateSpecific(string serviceName, long partitionKey, string endpointName)
          => new Resolver(this, serviceName, partitionKey, endpointName);
-      public Resolver CreateSpecific(String serviceName, String endpointName)
+      public Resolver CreateSpecific(string serviceName, string endpointName)
          => new Resolver(this, serviceName, null, endpointName);
 
-      public Task<TResult> CallAsync<TResult>(String serviceName, CancellationToken cancellationToken,
-         Func<IReadOnlyDictionary<String, String>, CancellationToken, Task<TResult>> func)
+      public Task<TResult> CallAsync<TResult>(string serviceName, CancellationToken cancellationToken,
+         Func<IReadOnlyDictionary<string, string>, CancellationToken, Task<TResult>> func)
          => CallAsync(serviceName, null, cancellationToken, func);
 
-      public Task<TResult> CallAsync<TResult>(String serviceName, Int64 partitionKey, CancellationToken cancellationToken,
-         Func<IReadOnlyDictionary<String, String>, CancellationToken, Task<TResult>> func)
-         => CallAsync(serviceName, (Int64?) partitionKey, cancellationToken, func);
+      public Task<TResult> CallAsync<TResult>(string serviceName, long partitionKey, CancellationToken cancellationToken,
+         Func<IReadOnlyDictionary<string, string>, CancellationToken, Task<TResult>> func)
+         => CallAsync(serviceName, (long?) partitionKey, cancellationToken, func);
 
-      private async Task<TResult> CallAsync<TResult>(String serviceName, Int64? partitionKey, CancellationToken cancellationToken,
-         Func<IReadOnlyDictionary<String, String>, CancellationToken, Task<TResult>> func) {
+      private async Task<TResult> CallAsync<TResult>(string serviceName, long? partitionKey, CancellationToken cancellationToken,
+         Func<IReadOnlyDictionary<string, string>, CancellationToken, Task<TResult>> func) {
          var serviceNameAndPartition = serviceName + ";" + partitionKey?.ToString();
          for (;;) {
-            PartitionInfo servicePartitionInfo = m_clusterPartitionEndpointCache.Get(serviceNameAndPartition);
+            var servicePartitionInfo = m_clusterPartitionEndpointCache.Get(serviceNameAndPartition);
             try {
                // We do not have endpoints, get them using https://msdn.microsoft.com/en-us/library/azure/dn707638.aspx
                if (servicePartitionInfo == null) {
@@ -95,7 +95,7 @@ namespace Richter.Utilities {
       private sealed class Cache<TValue> : IDisposable where TValue : class {
          private readonly MemoryCache m_cache;
          private readonly CacheItemPolicy m_cacheItemPolicy;
-         public Cache(String name, TimeSpan slidingExpiration) {
+         public Cache(string name, TimeSpan slidingExpiration) {
             System.Collections.Specialized.NameValueCollection config = null;
             /*new System.Collections.Specialized.NameValueCollection {
                { "CacheMemoryLimitMegabytes", "50942361600" },
@@ -105,30 +105,30 @@ namespace Richter.Utilities {
             m_cacheItemPolicy = new CacheItemPolicy { SlidingExpiration = slidingExpiration };
          }
          public void Dispose() => m_cache.Dispose();
-         public TValue Get(String key) => (TValue)m_cache.Get(key);
-         public TValue AddOrGetExisting(String key, TValue value)
+         public TValue Get(string key) => (TValue)m_cache.Get(key);
+         public TValue AddOrGetExisting(string key, TValue value)
             => (TValue)m_cache.AddOrGetExisting(key, value, m_cacheItemPolicy);
-         public Boolean Add(String key, TValue value)
+         public bool Add(string key, TValue value)
             => m_cache.Add(key, value, m_cacheItemPolicy);
-         public void Set(String key, TValue value)
+         public void Set(string key, TValue value)
             => m_cache.Set(key, value, m_cacheItemPolicy);
-         public TValue Remove(String key) => (TValue)m_cache.Remove(key);
+         public TValue Remove(string key) => (TValue)m_cache.Remove(key);
       }
    }
 
    public sealed class Resolver {
-      public readonly String ServiceName;
-      public readonly Int64? PartitionKey;
-      public readonly String EndpointName;
+      public readonly string ServiceName;
+      public readonly long? PartitionKey;
+      public readonly string EndpointName;
       private readonly PartitionEndpointResolver m_partitionEndpointResolver;
-      internal Resolver(PartitionEndpointResolver partitionEndpointResolver, String serviceName, Int64? partitionKey, String endpointName) {
+      internal Resolver(PartitionEndpointResolver partitionEndpointResolver, string serviceName, long? partitionKey, string endpointName) {
          m_partitionEndpointResolver = partitionEndpointResolver;
          ServiceName = serviceName;
          PartitionKey = partitionKey;
          EndpointName = endpointName;
       }
       public Task<TResult> CallAsync<TResult>(CancellationToken cancellationToken,
-         Func<String, CancellationToken, Task<TResult>> func)
+         Func<string, CancellationToken, Task<TResult>> func)
          => PartitionKey.HasValue
             ? m_partitionEndpointResolver.CallAsync(ServiceName, PartitionKey.Value, cancellationToken,
                (ep, ct) => func(ep[EndpointName], ct))

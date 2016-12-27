@@ -8,7 +8,7 @@ namespace Richter.Utilities {
 
       static Crc32() {
          for (UInt32 n = 0; n < 256; n++) {
-            UInt32 remainder = n;   // Remainder from polynomial division
+            var remainder = n;   // Remainder from polynomial division
             for (UInt32 k = 0; k < 8; k++) {
                if ((remainder & 1) != 0) remainder = 0xedb88320 ^ (remainder >> 1);
                else remainder >>= 1;
@@ -17,20 +17,20 @@ namespace Richter.Utilities {
          }
       }
 
-      public UInt32 Start(Byte[] bytes, Int32 start = 0, Int32 length = -1)
+      public UInt32 Start(byte[] bytes, int start = 0, int length = -1)
          => Update(c_allOnes, bytes, start, length);
 
-      public UInt32 Update(UInt32 crc, Byte[] bytes, Int32 start = 0, Int32 length = -1) {
+      public UInt32 Update(UInt32 crc, byte[] bytes, int start = 0, int length = -1) {
          if (length == -1) length = bytes.Length - start;
          for (UInt32 n = 0; n < length; n++)
             crc = s_CrcTable[(crc ^ bytes[start + n]) & 0xff] ^ (crc >> 8);
          return crc;
       }
-      public UInt32 Finish(Byte[] bytes, Int32 start = 0, Int32 length = -1)
+      public uint Finish(byte[] bytes, int start = 0, int length = -1)
          => Finish(Start(bytes, start, length));
 
-      public UInt32 Finish(UInt32 crc, Byte[] bytes, Int32 start = 0, Int32 length = -1)
+      public uint Finish(uint crc, byte[] bytes, int start = 0, int length = -1)
          => Finish(Update(crc, bytes, start, length));
-      public UInt32 Finish(UInt32 crc) => crc ^ c_allOnes;  // Final is the 1's compliment
+      public uint Finish(UInt32 crc) => crc ^ c_allOnes;  // Final is the 1's compliment
    }
 }

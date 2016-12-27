@@ -13,12 +13,12 @@ namespace Richter.Utilities {
 
       private static async Task WithCancellationHelper(this Task originalTask, CancellationToken cancellationToken) {
          // Create a Task that completes when the CancellationToken is canceled
-         var cancelTask = new TaskCompletionSource<Boolean>();
+         var cancelTask = new TaskCompletionSource<bool>();
 
          // When the CancellationToken is canceled, complete the Task
          using (cancellationToken.Register(() => cancelTask.TrySetResult(true))) {
             // Create another Task that completes when the original Task or when the CancellationToken's Task
-            Task any = await Task.WhenAny(originalTask, cancelTask.Task);
+            var any = await Task.WhenAny(originalTask, cancelTask.Task);
             if (any == cancelTask.Task) throw new OperationCanceledException(cancellationToken);
          }
          // await original task (synchronously); if it failed, awaiting it 
@@ -36,12 +36,12 @@ namespace Richter.Utilities {
 
       private static async Task<T> WithCancellationHelper<T>(this Task<T> originalTask, CancellationToken cancellationToken) {
          // Create a Task that completes when the CancellationToken is canceled
-         var cancelTask = new TaskCompletionSource<Boolean>();
+         var cancelTask = new TaskCompletionSource<bool>();
 
          // When the CancellationToken is canceled, complete the Task
          using (cancellationToken.Register(() => cancelTask.TrySetResult(true))) {
             // Create another Task that completes when the original Task or when the CancellationToken's Task
-            Task any = await Task.WhenAny(originalTask, cancelTask.Task);
+            var any = await Task.WhenAny(originalTask, cancelTask.Task);
             if (any == cancelTask.Task) throw new OperationCanceledException(cancellationToken);
          }
          // await original task (synchronously); if it failed, awaiting it 

@@ -39,7 +39,7 @@ namespace SFAuction.Svc.ApiGateway {
       [NonEvent]
       public void Message(string message, params object[] args) {
          if (this.IsEnabled()) {
-            string finalMessage = string.Format(message, args);
+            var finalMessage = string.Format(message, args);
             Message(finalMessage);
          }
       }
@@ -55,7 +55,7 @@ namespace SFAuction.Svc.ApiGateway {
       [NonEvent]
       public void ServiceMessage(StatefulService service, string message, params object[] args) {
          if (this.IsEnabled()) {
-            string finalMessage = string.Format(message, args);
+            var finalMessage = string.Format(message, args);
             ServiceMessage(
                 service.Context.ServiceName.ToString(),
                 service.Context.ServiceTypeName,

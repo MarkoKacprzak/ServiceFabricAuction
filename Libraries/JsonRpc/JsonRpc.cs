@@ -13,27 +13,27 @@ using Microsoft.CSharp.RuntimeBinder;
 
 namespace SFAuction.JsonRpc {
    public struct JsonRpcMessageId {
-      public readonly Boolean IsString; // false
-      public readonly Int64 Number;  // 0
-      public readonly String String; // null
-      public JsonRpcMessageId(Int64 id) {
+      public readonly bool IsString; // false
+      public readonly long Number;  // 0
+      public readonly string String; // null
+      public JsonRpcMessageId(long id) {
          IsString = false;
          Number = id;
          String = null;
       }
-      public JsonRpcMessageId(String id) {
+      public JsonRpcMessageId(string id) {
          IsString = true;
          String = id;
          Number = 0;
       }
 
-      public static implicit operator JsonRpcMessageId(Int64 id) => new JsonRpcMessageId(id);
-      public static implicit operator JsonRpcMessageId(String id) => new JsonRpcMessageId(id);
+      public static implicit operator JsonRpcMessageId(long id) => new JsonRpcMessageId(id);
+      public static implicit operator JsonRpcMessageId(string id) => new JsonRpcMessageId(id);
    }
 
    public abstract class JsonRpcMessage {
       // http://www.jsonrpc.org/specification
-      public const String Version = "2.0";
+      public const string Version = "2.0";
       internal static readonly JavaScriptSerializer Serializer = new JavaScriptSerializer();
 
       public readonly JsonRpcMessageId Id;
@@ -41,23 +41,23 @@ namespace SFAuction.JsonRpc {
    }
 
    public sealed class JsonRpcRequest : JsonRpcMessage {
-      public JsonRpcRequest(JsonRpcMessageId id, String method, IDictionary<String, Object> parameters = null) : base(id) {
+      public JsonRpcRequest(JsonRpcMessageId id, string method, IDictionary<string, Object> parameters = null) : base(id) {
          Method = method;
          ParametersAreNamed = true;
          NamedParameters = parameters;
       }
-      public JsonRpcRequest(JsonRpcMessageId id, String method, IList<Object> parameters = null) : base(id) {
+      public JsonRpcRequest(JsonRpcMessageId id, string method, IList<Object> parameters = null) : base(id) {
          Method = method;
          ParametersAreNamed = false;
          PositionalParameters = parameters;
       }
-      public readonly String Method = null;
-      public readonly Boolean ParametersAreNamed;
-      public readonly IDictionary<String, Object> NamedParameters = null;
+      public readonly string Method = null;
+      public readonly bool ParametersAreNamed;
+      public readonly IDictionary<string, Object> NamedParameters = null;
       public readonly IList<Object> PositionalParameters = null;
-      public override String ToString() {
+      public override string ToString() {
          // JMR: throw if method is null
-         StringBuilder json = new StringBuilder("{ \"jsonrpc\": \"" + Version + "\"")
+         var json = new StringBuilder("{ \"jsonrpc\": \"" + Version + "\"")
             .AppendId(Id)
             .Append($", \"method\": \"{Method}\"");
          if (ParametersAreNamed) json.AppendParameters(NamedParameters); else json.AppendParameters(PositionalParameters);
@@ -65,32 +65,32 @@ namespace SFAuction.JsonRpc {
          return json.ToString();
       }
 
-      public static JsonRpcRequest Parse(String json) {
-         var jsonObject = (IDictionary<String, Object>)Serializer.DeserializeObject(json);
-         jsonObject = new Dictionary<String, Object>(jsonObject, StringComparer.OrdinalIgnoreCase);
+      public static JsonRpcRequest Parse(string json) {
+         var jsonObject = (IDictionary<string, Object>)Serializer.DeserializeObject(json);
+         jsonObject = new Dictionary<string, Object>(jsonObject, StringComparer.OrdinalIgnoreCase);
 
-         if ((String)jsonObject["jsonrpc"] != Version)
+         if ((string)jsonObject["jsonrpc"] != Version)
             throw new ArgumentException($"JsonRpc must be \"{Version}\"");
 
-         String method = (String)jsonObject["method"];
-         Object paramsObject = !jsonObject.ContainsKey("params") ? null : jsonObject["params"];
-         Object[] positionalParameters = paramsObject as Object[];
+            var method = (string)jsonObject["method"];
+         var paramsObject = !jsonObject.ContainsKey("params") ? null : jsonObject["params"];
+         var positionalParameters = paramsObject as Object[];
          if (positionalParameters != null) {
             if (!jsonObject.ContainsKey("id"))
                return new JsonRpcRequest(null, method, positionalParameters);
 
-            if (jsonObject["id"].GetType() == typeof(String))
-               return new JsonRpcRequest((String)jsonObject["id"], method, positionalParameters);
+            if (jsonObject["id"].GetType() == typeof(string))
+               return new JsonRpcRequest((string)jsonObject["id"], method, positionalParameters);
 
             return new JsonRpcRequest(Convert.ToInt64(jsonObject["id"]), method, positionalParameters);
          }
 
-         var namedParameters = paramsObject as IDictionary<String, Object>;
+         var namedParameters = paramsObject as IDictionary<string, Object>;
          if (!jsonObject.ContainsKey("id"))
             return new JsonRpcRequest(null, method, namedParameters);
 
-         if (jsonObject["id"].GetType() == typeof(String))
-            return new JsonRpcRequest((String)jsonObject["id"], method, namedParameters);
+         if (jsonObject["id"].GetType() == typeof(string))
+            return new JsonRpcRequest((string)jsonObject["id"], method, namedParameters);
 
          return new JsonRpcRequest(Convert.ToInt64(jsonObject["id"]), method, namedParameters);
       }
@@ -107,7 +107,7 @@ namespace SFAuction.JsonRpc {
             response = new JsonRpcResultResponse(Id, jsonResult);
          }
          catch (Exception e) {
-            var parameters = String.Join(", ", ParametersAreNamed
+            var parameters = string.Join(", ", ParametersAreNamed
                   ? NamedParameters.Select(kvp => kvp.Key + "=" + kvp.Value)
                   : PositionalParameters.Select(p => p.ToString()));
 
@@ -119,19 +119,19 @@ namespace SFAuction.JsonRpc {
          return response;
       }
 
-      private async Task<String> InvokeAsync(JavaScriptSerializer jsSerializer, Type type, Object instance, CancellationToken token) {
+      private async Task<string> InvokeAsync(JavaScriptSerializer jsSerializer, Type type, Object instance, CancellationToken token) {
          // Throw if method not found, parameter counts don't match(?), method requires arg not specified. Arg specified but not used?
          var methodInfo = type.GetTypeInfo().GetDeclaredMethod(Method);
          if (methodInfo == null) // Method not found
             throw new JsonRpcResponseErrorException(new JsonRpcErrorResponse(Id, JsonRpcError.MethodNotFound, Method));
 
-         ParameterInfo[] methodParams = methodInfo.GetParameters();
-         Boolean lastArgIsCancellationToken = (methodParams.Length == 0) ? false
+         var methodParams = methodInfo.GetParameters();
+            var lastArgIsCancellationToken = (methodParams.Length == 0) ? false
             : methodParams[methodParams.Length - 1].ParameterType == typeof(CancellationToken);
 
-         Object[] arguments = new Object[methodParams.Length];// + (lastArgIsCancellationToken ? 1 : 0)];
-         Int32 passedArgs = methodParams.Length - (lastArgIsCancellationToken ? 1 : 0);
-         for (Int32 arg = 0; arg < passedArgs; arg++) {
+         var arguments = new Object[methodParams.Length];// + (lastArgIsCancellationToken ? 1 : 0)];
+            var passedArgs = methodParams.Length - (lastArgIsCancellationToken ? 1 : 0);
+         for (var arg = 0; arg < passedArgs; arg++) {
             Object argValue;
             if (!ParametersAreNamed) {
                argValue = PositionalParameters[arg];
@@ -145,8 +145,8 @@ namespace SFAuction.JsonRpc {
          }
          if (lastArgIsCancellationToken) arguments[arguments.Length - 1] = token;  // Add the CancellationToken as the last parameter
                                                                                    // JMR: What if passed arg is not required by method? throw? flag to ignore?
-         Object result = methodInfo.Invoke(instance, arguments);
-         Task task = result as Task;
+         var result = methodInfo.Invoke(instance, arguments);
+         var task = result as Task;
          if (task != null) {
             await task;
             try {
@@ -160,39 +160,39 @@ namespace SFAuction.JsonRpc {
 
    public abstract class JsonRpcResponse : JsonRpcMessage {
       protected JsonRpcResponse(JsonRpcMessageId id) : base(id) { }
-      public static JsonRpcResponse Parse(String json) {
-         var jsonObject = (IDictionary<String, Object>)Serializer.DeserializeObject(json);
-         if ((String)jsonObject["jsonrpc"] != Version)
+      public static JsonRpcResponse Parse(string json) {
+         var jsonObject = (IDictionary<string, Object>)Serializer.DeserializeObject(json);
+         if ((string)jsonObject["jsonrpc"] != Version)
             throw new ArgumentException($"JsonRpc must be \"{Version}\"");
 
          if (jsonObject.ContainsKey("result")) {
-            String jsonResult = Serializer.Serialize(jsonObject["result"]);   // Turn .NET objects back into JSON
-            if (jsonObject["id"].GetType() == typeof(String))
-               return new JsonRpcResultResponse((String)jsonObject["id"], jsonResult);
+                var jsonResult = Serializer.Serialize(jsonObject["result"]);   // Turn .NET objects back into JSON
+            if (jsonObject["id"].GetType() == typeof(string))
+               return new JsonRpcResultResponse((string)jsonObject["id"], jsonResult);
             return new JsonRpcResultResponse(Convert.ToInt64(jsonObject["id"]), jsonResult);
          }
 
          if (jsonObject.ContainsKey("error")) {
-            Int32 error = (Int32)jsonObject["error"];
-            String message = (String)jsonObject["message"];
-            String data = !jsonObject.ContainsKey("data") ? null : (String)jsonObject["data"];
-            if (jsonObject["id"].GetType() == typeof(String))
-               return new JsonRpcErrorResponse((String)jsonObject["id"], error, message, data);
+                var error = (int)jsonObject["error"];
+                var message = (string)jsonObject["message"];
+                var data = !jsonObject.ContainsKey("data") ? null : (string)jsonObject["data"];
+            if (jsonObject["id"].GetType() == typeof(string))
+               return new JsonRpcErrorResponse((string)jsonObject["id"], error, message, data);
             return new JsonRpcErrorResponse(Convert.ToInt64(jsonObject["id"]), error, message, data);
          }
          throw new ArgumentException("Response must contain 'result' or 'error'");
       }
-      public abstract String JsonResult { get; }
+      public abstract string JsonResult { get; }
    }
 
    public sealed class JsonRpcResultResponse : JsonRpcResponse {
-      private readonly String m_jsonResult;
-      public JsonRpcResultResponse(JsonRpcMessageId id, String jsonResult) : base(id) {
+      private readonly string m_jsonResult;
+      public JsonRpcResultResponse(JsonRpcMessageId id, string jsonResult) : base(id) {
          m_jsonResult = jsonResult;
       }
-      public override String JsonResult => m_jsonResult;
+      public override string JsonResult => m_jsonResult;
 
-      public override String ToString() {
+      public override string ToString() {
          StringBuilder json = new StringBuilder($"{{\"jsonrpc\": \"{Version}\"")
             .AppendId(Id)
             .Append($", \"result\": {m_jsonResult}")
@@ -201,7 +201,8 @@ namespace SFAuction.JsonRpc {
       }
    }
 
-   public enum JsonRpcError : Int32 {
+   public enum JsonRpcError : int
+    {
       Parse = -32700,            // Parse error; Invalid JSON was received by the server.
       InvalidRequest = -32600,   // Invalid Request; The JSON sent is not a valid Request object.
       MethodNotFound = -32601,   // Method not found; The method does not exist / is not available.
@@ -212,26 +213,26 @@ namespace SFAuction.JsonRpc {
    }
 
    public sealed class JsonRpcErrorResponse : JsonRpcResponse {
-      public JsonRpcErrorResponse(JsonRpcMessageId id, JsonRpcError error, String message, String data = null) : base(id) {
+      public JsonRpcErrorResponse(JsonRpcMessageId id, JsonRpcError error, string message, string data = null) : base(id) {
          Error = error;
          Message = message;
          Data = data;
       }
-      public JsonRpcErrorResponse(JsonRpcMessageId id, Int32 error, String message, String data = null) : this(id, (JsonRpcError)error, message, data) { }
+      public JsonRpcErrorResponse(JsonRpcMessageId id, int error, string message, string data = null) : this(id, (JsonRpcError)error, message, data) { }
 
       public readonly JsonRpcError Error = 0;
-      public readonly String Message;
-      public readonly String Data;
-      public override String ToString() {
+      public readonly string Message;
+      public readonly string Data;
+      public override string ToString() {
          StringBuilder json = new StringBuilder($"{{\"jsonrpc\": \"{Version}\"")
             .AppendId(Id)
-            .Append($", \"error\": {(Int32)Error}"); // 'error'?
+            .Append($", \"error\": {(int)Error}"); // 'error'?
          if (Message != null) json.Append($", \"message\": \"{Message}\"");
          if (Data != null) json.Append($", \"data\": \"{Data}\"");
          json.Append("}");
          return json.ToString();
       }
-      public override String JsonResult { get { throw new JsonRpcResponseErrorException(this); } }
+      public override string JsonResult { get { throw new JsonRpcResponseErrorException(this); } }
    }
 
    public sealed class JsonRpcResponseErrorException : Exception {
@@ -244,30 +245,30 @@ namespace SFAuction.JsonRpc {
 
    internal static class JsonRpcExtensions {
       // JSON ECMA Specification (section 9): http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf
-      public static String JsonEncode(this string stringValue) {
+      public static string JsonEncode(this string stringValue) {
          var sb = new StringBuilder();
-         for (int c = 0; c < stringValue.Length; c++) {
+         for (var c = 0; c < stringValue.Length; c++) {
             // Escape special characters
             if (c_escapeChars.IndexOf(stringValue[c]) >= 0) sb.Append("\\");
             sb.Append(stringValue[c]);
          }
          return sb.ToString();
       }
-      private const String c_escapeChars = "\"\\/\b\f\n\r\t";
-      public static String JsonDecode(this String jsonString) {
+      private const string c_escapeChars = "\"\\/\b\f\n\r\t";
+      public static string JsonDecode(this string jsonString) {
          var sb = new StringBuilder();
-         for (int c = 0; c < jsonString.Length; c++) {
-            Char ch = jsonString[c];
+         for (var c = 0; c < jsonString.Length; c++) {
+            var ch = jsonString[c];
             if (ch == '\\' && (c < jsonString.Length - 2) && c_escapeChars.IndexOf(jsonString[c + 1]) >= 0) continue;   // Skip the '\\'
             sb.Append(ch);
          }
          return sb.ToString();
       }
 
-      internal static StringBuilder AppendParameters(this StringBuilder json, IEnumerable<KeyValuePair<String, Object>> parameters) {
+      internal static StringBuilder AppendParameters(this StringBuilder json, IEnumerable<KeyValuePair<string, Object>> parameters) {
          if (parameters != null) {
             json.Append(", \"params\": {");
-            Boolean firstParam = true;
+                var firstParam = true;
             foreach (var p in parameters) {
                if (!firstParam) json.Append(", "); else firstParam = false;
                json.Append($"\"{p.Key}\": ").AppendJson(p.Value);
@@ -279,7 +280,7 @@ namespace SFAuction.JsonRpc {
       internal static StringBuilder AppendParameters(this StringBuilder json, IEnumerable<Object> parameters) {
          if (parameters != null) {
             json.Append(", \"params\": [");
-            Boolean firstParam = true;
+                var firstParam = true;
             foreach (var p in parameters) {
                if (!firstParam) json.Append(", "); else firstParam = false;
                json.AppendJson(p);
@@ -351,7 +352,7 @@ namespace SFAuction.JsonRpc {
 #endif
 
    public sealed class JsonRpcPipeIO /*, IDisposable */{
-      public static async Task StartServerAsync(String pipeName, Int32 maxRequestSizeInBytes, Func<JsonRpcRequest, Task<JsonRpcResponse>> serviceClientRequestAsync, CancellationToken ct = default(CancellationToken)) {
+      public static async Task StartServerAsync(string pipeName, int maxRequestSizeInBytes, Func<JsonRpcRequest, Task<JsonRpcResponse>> serviceClientRequestAsync, CancellationToken ct = default(CancellationToken)) {
          while (true) {
             ct.ThrowIfCancellationRequested();
             using (var pipe = new NamedPipeServerStream(pipeName, PipeDirection.InOut, -1,
@@ -362,12 +363,12 @@ namespace SFAuction.JsonRpc {
 
                using (pipe) {
                   // Read request from client:
-                  Byte[] data = new Byte[maxRequestSizeInBytes];
-                  Int32 bytesRead = await pipe.ReadAsync(data, 0, data.Length);
+                  var data = new byte[maxRequestSizeInBytes];
+                        var bytesRead = await pipe.ReadAsync(data, 0, data.Length);
 
                   // Process request to get response:
-                  JsonRpcRequest request = JsonRpcRequest.Parse(Encoding.UTF8.GetString(data, 0, bytesRead));
-                  JsonRpcResponse response = await serviceClientRequestAsync(request);
+                  var request = JsonRpcRequest.Parse(Encoding.UTF8.GetString(data, 0, bytesRead));
+                  var response = await serviceClientRequestAsync(request);
 
                   // Write response to client:
                   data = Encoding.UTF8.GetBytes(response.ToString());
@@ -377,10 +378,10 @@ namespace SFAuction.JsonRpc {
          }
       }
 
-      public readonly String ServerName;
-      public readonly String PipeName;
-      public readonly Int32 DefaultMaxResponseSizeInBytes;
-      public JsonRpcPipeIO(String serverName, String pipeName, Int32 defaultMaxResponseSizeInBytes) {
+      public readonly string ServerName;
+      public readonly string PipeName;
+      public readonly int DefaultMaxResponseSizeInBytes;
+      public JsonRpcPipeIO(string serverName, string pipeName, int defaultMaxResponseSizeInBytes) {
          ServerName = serverName;
          PipeName = pipeName;
          DefaultMaxResponseSizeInBytes = defaultMaxResponseSizeInBytes;
@@ -395,7 +396,7 @@ namespace SFAuction.JsonRpc {
   //          m_pipe.ReadMode = PipeTransmissionMode.Message;
          }
 #endif
-      public async Task<JsonRpcResponse> SendAsync(JsonRpcRequest request, Int32 maxResponseSizeInBytes = 0) {
+      public async Task<JsonRpcResponse> SendAsync(JsonRpcRequest request, int maxResponseSizeInBytes = 0) {
          using (var pipe = new NamedPipeClientStream(ServerName, PipeName,
             PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough)) {
             /*await */
@@ -407,7 +408,7 @@ namespace SFAuction.JsonRpc {
             await pipe.WriteAsync(data, 0, data.Length);
 
             // Get response from server:
-            data = new Byte[maxResponseSizeInBytes == 0 ? DefaultMaxResponseSizeInBytes : maxResponseSizeInBytes];
+            data = new byte[maxResponseSizeInBytes == 0 ? DefaultMaxResponseSizeInBytes : maxResponseSizeInBytes];
             var bytesRead = await pipe.ReadAsync(data, 0, data.Length);
             return JsonRpcResponse.Parse(Encoding.UTF8.GetString(data, 0, bytesRead));
          }

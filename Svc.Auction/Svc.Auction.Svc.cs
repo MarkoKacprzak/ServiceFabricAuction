@@ -17,9 +17,9 @@ namespace SFAuction.Svc.Auction {
    /// The FabricRuntime creates an instance of this class for each service type instance.
    /// </summary>
    internal sealed class AuctionSvc : StatefulService {
-      private const String c_replicaEndpoint = "ReplicaEndpoint";
+      private const string c_replicaEndpoint = "ReplicaEndpoint";
       private static readonly JavaScriptSerializer s_jsSerializer = new JavaScriptSerializer();
-      private readonly String m_nodeIP = FabricRuntime.GetNodeContext().IPAddressOrFQDN;
+      private readonly string m_nodeIP = FabricRuntime.GetNodeContext().IPAddressOrFQDN;
       private PartitionOperations m_operations;
       static AuctionSvc() { s_jsSerializer.RegisterConverters(new[] { new DataTypeJsonConverter() }); }
       public AuctionSvc(StatefulServiceContext context) : base(context) { }
@@ -52,16 +52,16 @@ namespace SFAuction.Svc.Auction {
          if (m_operations == null)
             Interlocked.CompareExchange(ref m_operations, await PartitionOperations.CreateAsync(StateManager), null);
 
-         String output = null;
+            string output = null;
          try {
-            HttpListenerRequest request = context.Request;
+            var request = context.Request;
             if (request.HttpMethod == "GET") {
-               // Read request from client:
-               String jsonRpc = context.Request.QueryString["jsonrpc"];
+                    // Read request from client:
+                    var jsonRpc = context.Request.QueryString["jsonrpc"];
 
                // Process request to get response:
-               JsonRpcRequest jsonRequest = JsonRpcRequest.Parse(jsonRpc);
-               JsonRpcResponse jsonResponse = await jsonRequest.InvokeAsync(s_jsSerializer, m_operations, cancelRequest);
+               var jsonRequest = JsonRpcRequest.Parse(jsonRpc);
+               var jsonResponse = await jsonRequest.InvokeAsync(s_jsSerializer, m_operations, cancelRequest);
                output = jsonResponse.ToString();
             }
          }
@@ -70,7 +70,7 @@ namespace SFAuction.Svc.Auction {
          using (var response = context.Response) {
             if (output != null) {
                response.AppendHeader("Access-Control-Allow-Origin", "http://localhost:8080");
-               Byte[] outBytes = Encoding.UTF8.GetBytes(output);
+               var outBytes = Encoding.UTF8.GetBytes(output);
                response.OutputStream.Write(outBytes, 0, outBytes.Length);
             }
          }
