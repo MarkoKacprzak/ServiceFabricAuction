@@ -87,15 +87,15 @@ namespace SFAuction.Svc.ApiGateway {
          const string imageUrl = "images/";
          var now = DateTime.UtcNow;
          var proxy = new ServiceOperations(PartitionEndpointResolver, new Uri(@"fabric:/SFAuction/AuctionSvcInstance"));
-         const string jeff = "Jeff@Microsoft.com", chacko = "Chacko@Microsoft.com";
+         const string slipper = "slipper@o2.pl", marek = "marekkacprzak@o2.pl";
 
          try {
-            await proxy.CreateUserAsync(jeff, cancellationToken);
+            await proxy.CreateUserAsync(slipper, cancellationToken);
          }
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(jeff,
+            await proxy.CreateItemAsync(slipper,
                "Microsoft XBox One",
                imageUrl + "xbox-one.png",
                now.AddDays(5),
@@ -104,7 +104,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(jeff,
+            await proxy.CreateItemAsync(slipper,
                   "Cushion cut diamond engagement ring set in platinum",
                   imageUrl + "diamond-ring.jpg",
                    now.AddDays(5),
@@ -113,12 +113,12 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateUserAsync(chacko, cancellationToken);
+            await proxy.CreateUserAsync(marek, cancellationToken);
          }
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(chacko,
+            await proxy.CreateItemAsync(marek,
                   "Child bicycle with training wheels and basket - PINK",
                   imageUrl + "child-bicycle.jpg",
                    now.AddDays(6), // Expired
@@ -127,7 +127,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(chacko,
+            await proxy.CreateItemAsync(marek,
                "Dining Table Set with 6 chairs - Rustic Wood",
                imageUrl + "rustic-dining-sets.jpg",
                 now.AddDays(4), // Expired
@@ -136,7 +136,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(chacko,
+            await proxy.CreateItemAsync(marek,
                "Microsoft Lumia 950 XL Dual SIM - 32 GB ",
                imageUrl + "Lumia-950-XL-hero-jpg.jpg",
                now.AddDays(7),
@@ -145,7 +145,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(chacko,
+            await proxy.CreateItemAsync(marek,
        "Microsoft Band 2 - Medium ",
        imageUrl + "band-2.jpg",
            now.AddHours(5),
@@ -154,7 +154,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(chacko,
+            await proxy.CreateItemAsync(marek,
                "Contoso All Expense paid Trip to Hawaii for 2 ",
                imageUrl + "hawaii.jpg",
                 now.AddDays(10),
@@ -163,7 +163,7 @@ namespace SFAuction.Svc.ApiGateway {
          catch (Exception ex) { ex.GetType(); }
 
          try {
-            await proxy.CreateItemAsync(chacko,
+            await proxy.CreateItemAsync(marek,
                   "Microsoft Surface Pro 3 256GB SSD Intel I5 1.9GHZ",
                   imageUrl + "MicrosoftSurface.jpg",
                    now.AddDays(10),
