@@ -3,8 +3,8 @@ using System.Text;
 
 namespace Richter.Utilities {
    public static class Base32 {
-      private const int CInByteSize = 8;
-      private const int COutByteSize = 5;
+      private const int InByteSize = 8;
+      private const int OutByteSize = 5;
       private const string Base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
       /// <summary>Convert byte array to Base32 format.</summary>
@@ -13,7 +13,7 @@ namespace Richter.Utilities {
       public static string ToBase32String(this byte[] bytes) {
          if (bytes == null || bytes.Length == 0) throw new ArgumentException("bytes");
 
-         var builder = new StringBuilder(bytes.Length * CInByteSize / COutByteSize);
+         var builder = new StringBuilder(bytes.Length * InByteSize / OutByteSize);
 
             // Position in the input buffer
             var bytesPosition = 0;
@@ -31,19 +31,19 @@ namespace Richter.Utilities {
          // Iterate through input buffer until we reach past the end of it
          while (bytesPosition < bytes.Length) {
                 // Calculate the number of bits we can extract out of current input byte to fill missing bits in the output byte
-                var bitsAvailableInByte = Math.Min(CInByteSize - bytesSubPosition, COutByteSize - outputBase32BytePosition);
+                var bitsAvailableInByte = Math.Min(InByteSize - bytesSubPosition, OutByteSize - outputBase32BytePosition);
 
             // Make space in the output byte
             outputBase32Byte <<= bitsAvailableInByte;
 
             // Extract the part of the input byte and move it to the output byte
-            outputBase32Byte |= (byte)(bytes[bytesPosition] >> (CInByteSize - (bytesSubPosition + bitsAvailableInByte)));
+            outputBase32Byte |= (byte)(bytes[bytesPosition] >> (InByteSize - (bytesSubPosition + bitsAvailableInByte)));
 
             // Update current sub-byte position
             bytesSubPosition += bitsAvailableInByte;
 
             // Check overflow
-            if (bytesSubPosition >= CInByteSize) { // Move to the next byte
+            if (bytesSubPosition >= InByteSize) { // Move to the next byte
                bytesPosition++; bytesSubPosition = 0;
             }
 
@@ -51,7 +51,7 @@ namespace Richter.Utilities {
             outputBase32BytePosition += bitsAvailableInByte;
 
             // Check overflow or end of input array
-            if (outputBase32BytePosition >= COutByteSize) {
+            if (outputBase32BytePosition >= OutByteSize) {
                // Drop the overflow bits
                outputBase32Byte &= 0x1F;  // 0x1F = 00011111 in binary
 
@@ -66,7 +66,7 @@ namespace Richter.Utilities {
          // Check if we have a remainder
          if (outputBase32BytePosition > 0) {
             // Move to the right bits
-            outputBase32Byte <<= (COutByteSize - outputBase32BytePosition);
+            outputBase32Byte <<= (OutByteSize - outputBase32BytePosition);
 
             // Drop the overflow bits
             outputBase32Byte &= 0x1F;  // 0x1F = 00011111 in binary
@@ -89,7 +89,7 @@ namespace Richter.Utilities {
                 var base32StringUpperCase = base32String.ToUpperInvariant();
 
             // Prepare output byte array
-            var outputBytes = new byte[base32StringUpperCase.Length * COutByteSize / CInByteSize];
+            var outputBytes = new byte[base32StringUpperCase.Length * OutByteSize / InByteSize];
 
             // Check the size
             if (outputBytes.Length == 0) {
@@ -121,19 +121,19 @@ namespace Richter.Utilities {
                }
 
                     // Calculate the number of bits we can extract out of current input character to fill missing bits in the output byte
-                    var bitsAvailableInByte = Math.Min(COutByteSize - base32SubPosition, CInByteSize - outputByteSubPosition);
+                    var bitsAvailableInByte = Math.Min(OutByteSize - base32SubPosition, InByteSize - outputByteSubPosition);
 
                // Make space in the output byte
                outputBytes[outputBytePosition] <<= bitsAvailableInByte;
 
                // Extract the part of the input character and move it to the output byte
-               outputBytes[outputBytePosition] |= (byte)(currentBase32Byte >> (COutByteSize - (base32SubPosition + bitsAvailableInByte)));
+               outputBytes[outputBytePosition] |= (byte)(currentBase32Byte >> (OutByteSize - (base32SubPosition + bitsAvailableInByte)));
 
                // Update current sub-byte position
                outputByteSubPosition += bitsAvailableInByte;
 
                // Check overflow
-               if (outputByteSubPosition >= CInByteSize) { // Move to the next byte
+               if (outputByteSubPosition >= InByteSize) { // Move to the next byte
                   outputBytePosition++; outputByteSubPosition = 0;
                }
 
@@ -141,7 +141,7 @@ namespace Richter.Utilities {
                base32SubPosition += bitsAvailableInByte;
 
                // Check overflow or end of input array
-               if (base32SubPosition >= COutByteSize) { // Move to the next character
+               if (base32SubPosition >= OutByteSize) { // Move to the next character
                   base32Position++;
                   base32SubPosition = 0;
                }

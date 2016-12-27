@@ -1,13 +1,13 @@
-﻿using Microsoft.ServiceFabric.Services.Client;
+﻿//using Microsoft.ServiceFabric.Services.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Fabric;
+//using System.Fabric;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Script.Serialization;
+//using System.Web.Script.Serialization;
 
 namespace Richter.Utilities {
    public static class Extensions {

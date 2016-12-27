@@ -4,18 +4,18 @@ using System.Threading.Tasks;
 
 namespace Richter.Utilities {
    public struct ExponentialBackoff {
-      private readonly int m_maxRetries, m_delayMilliseconds, m_maxDelayMilliseconds;
-      private int m_retries;
+      private readonly int _maxRetries, _delayMilliseconds, _maxDelayMilliseconds;
+      private int _retries;
       public ExponentialBackoff(int maxRetries, int delayMilliseconds, int maxDelayMilliseconds) {
-         m_maxRetries = maxRetries;
-         m_delayMilliseconds = delayMilliseconds;
-         m_maxDelayMilliseconds = maxDelayMilliseconds;
-         m_retries = 0;
+         _maxRetries = maxRetries;
+         _delayMilliseconds = delayMilliseconds;
+         _maxDelayMilliseconds = maxDelayMilliseconds;
+         _retries = 0;
       }
       public Task Delay(CancellationToken cancellationToken) {
-         if (m_retries == m_maxRetries)
+         if (_retries == _maxRetries)
             throw new TimeoutException("Max retry attempts exceeded.");
-            var delay = Math.Min(m_delayMilliseconds * (Pow(2, ++m_retries) - 1) / 2, m_maxDelayMilliseconds);
+            var delay = Math.Min(_delayMilliseconds * (Pow(2, ++_retries) - 1) / 2, _maxDelayMilliseconds);
          return Task.Delay(delay, cancellationToken);
       }
       private static int Pow(int number, int exponent) {

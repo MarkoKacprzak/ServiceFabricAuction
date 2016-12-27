@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonRpc", "Libraries\JsonRp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Management", "Libraries\Management\Management.csproj", "{0D653621-C46D-494A-9D0C-E7C5CA4329EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Richter.Utilities", "Libraries\Richter.Utilities\Richter.Utilities.csproj", "{540340E8-5A79-4574-8A72-180362E9DF59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,14 @@ Global
 		{0D653621-C46D-494A-9D0C-E7C5CA4329EE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0D653621-C46D-494A-9D0C-E7C5CA4329EE}.Release|x64.ActiveCfg = Release|Any CPU
 		{0D653621-C46D-494A-9D0C-E7C5CA4329EE}.Release|x64.Build.0 = Release|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Debug|x64.Build.0 = Debug|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Release|x64.ActiveCfg = Release|Any CPU
+		{540340E8-5A79-4574-8A72-180362E9DF59}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,5 +95,6 @@ Global
 		{65D6C13E-A3AA-48D3-A2B0-580AB5101811} = {320D6596-56EC-4E1A-AA94-F5B2E9F3A65B}
 		{7BFF26AF-1546-4F42-9ECF-D8A710D5E552} = {320D6596-56EC-4E1A-AA94-F5B2E9F3A65B}
 		{0D653621-C46D-494A-9D0C-E7C5CA4329EE} = {320D6596-56EC-4E1A-AA94-F5B2E9F3A65B}
+		{540340E8-5A79-4574-8A72-180362E9DF59} = {320D6596-56EC-4E1A-AA94-F5B2E9F3A65B}
 	EndGlobalSection
 EndGlobal
