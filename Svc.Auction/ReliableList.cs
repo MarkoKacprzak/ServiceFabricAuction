@@ -5,54 +5,49 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
-namespace SFAuction.Svc.Auction {
+namespace SFAuction.Svc.Auction
+{
 
-   public sealed class ReliableList<TKey> where TKey : IComparable<TKey>, IEquatable<TKey> {
-      private readonly IReliableDictionary<TKey, object> m_dictionary;
-      public static async Task<ReliableList<TKey>> CreateAsync(IReliableStateManager stateManager, string name) {
-         return new ReliableList<TKey>(await stateManager.GetOrAddAsync<IReliableDictionary<TKey, object>>(name));
-      }
-      private ReliableList(IReliableDictionary<TKey, object> dictionary) { m_dictionary = dictionary; }
+    public sealed class ReliableList<TKey> where TKey : IComparable<TKey>, IEquatable<TKey>
+    {
+        private readonly IReliableDictionary<TKey, object> _dictionary;
 
-      public Task ClearAsync(TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
-               => m_dictionary.ClearAsync(timeout.DefaultToInfinite(), cancellationToken);
-      public Task AddAsync(ITransaction tx, TKey key, TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
-         => m_dictionary.AddAsync(tx, key, null, timeout.DefaultToInfinite(), cancellationToken);
+        public static async Task<ReliableList<TKey>> CreateAsync(IReliableStateManager stateManager, string name)
+        {
+            return new ReliableList<TKey>(await stateManager.GetOrAddAsync<IReliableDictionary<TKey, object>>(name));
+        }
 
-      public Task<bool> ContainsAsync(ITransaction tx, TKey key, LockMode lockMode = LockMode.Default, TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
-         => m_dictionary.ContainsKeyAsync(tx, key, lockMode, timeout.DefaultToInfinite(), cancellationToken);
-      public Task<bool> TryAddAsync(ITransaction tx, TKey key, TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
-         => m_dictionary.TryAddAsync(tx, key, null, timeout.DefaultToInfinite(), cancellationToken);
-      public Task TryRemoveAsync(ITransaction tx, TKey key, TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
-               => m_dictionary.TryRemoveAsync(tx, key, timeout.DefaultToInfinite(), cancellationToken);
-      public async Task<IAsyncEnumerable<TKey>> CreateEnumerableAsync(ITransaction tx, EnumerationMode enumerationMode = EnumerationMode.Unordered, Func<TKey, bool> filter = null) {
-         var enumerable = await m_dictionary.CreateEnumerableAsync(tx, filter ?? (k => true), enumerationMode);
-         return new ReliableListEnumerable<TKey>(enumerable);
-      }
-   }
+        private ReliableList(IReliableDictionary<TKey, object> dictionary)
+        {
+            _dictionary = dictionary;
+        }
 
-   internal sealed class ReliableListEnumerable<TKey> : IAsyncEnumerable<TKey> {
-      private readonly IAsyncEnumerable<KeyValuePair<TKey, object>> m_inner;
-      public ReliableListEnumerable(IAsyncEnumerable<KeyValuePair<TKey, object>> inner) {
-         m_inner = inner;
-      }
-      public IAsyncEnumerator<TKey> GetAsyncEnumerator() =>
-         new ReliableListAsyncEnumerator<TKey>(m_inner.GetAsyncEnumerator());
-   }
+        public Task ClearAsync(TimeSpan timeout = default(TimeSpan),
+                CancellationToken cancellationToken = default(CancellationToken))
+            => _dictionary.ClearAsync(timeout.DefaultToInfinite(), cancellationToken);
 
-   internal sealed class ReliableListAsyncEnumerator<TKey> : IAsyncEnumerator<TKey> {
-      private readonly IAsyncEnumerator<KeyValuePair<TKey, object>> m_inner;
-      public ReliableListAsyncEnumerator(IAsyncEnumerator<KeyValuePair<TKey, object>> inner) {
-         m_inner = inner;
-      }
-      public TKey Current => m_inner.Current.Key;
+        public Task AddAsync(ITransaction tx, TKey key, TimeSpan timeout = default(TimeSpan),
+                CancellationToken cancellationToken = default(CancellationToken))
+            => _dictionary.AddAsync(tx, key, null, timeout.DefaultToInfinite(), cancellationToken);
 
-      public void Dispose() => m_inner.Dispose();
+        public Task<bool> ContainsAsync(ITransaction tx, TKey key, LockMode lockMode = LockMode.Default,
+                TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
+            => _dictionary.ContainsKeyAsync(tx, key, lockMode, timeout.DefaultToInfinite(), cancellationToken);
 
-      public Task<bool> MoveNextAsync(CancellationToken cancellationToken) => m_inner.MoveNextAsync(cancellationToken);
+        public Task<bool> TryAddAsync(ITransaction tx, TKey key, TimeSpan timeout = default(TimeSpan),
+                CancellationToken cancellationToken = default(CancellationToken))
+            => _dictionary.TryAddAsync(tx, key, null, timeout.DefaultToInfinite(), cancellationToken);
 
-      public void Reset() => m_inner.Reset();
-   }
+        public Task TryRemoveAsync(ITransaction tx, TKey key, TimeSpan timeout = default(TimeSpan),
+                CancellationToken cancellationToken = default(CancellationToken))
+            => _dictionary.TryRemoveAsync(tx, key, timeout.DefaultToInfinite(), cancellationToken);
+
+        public async Task<IAsyncEnumerable<TKey>> CreateEnumerableAsync(ITransaction tx,
+            EnumerationMode enumerationMode = EnumerationMode.Unordered, Func<TKey, bool> filter = null)
+        {
+            var enumerable = await _dictionary.CreateEnumerableAsync(tx, filter ?? (k => true), enumerationMode);
+            return new ReliableListEnumerable<TKey>(enumerable);
+        }
+    }
 }

@@ -15,22 +15,22 @@ namespace SFAuction.Svc.Auction
     {
         #region Infrastructure
 
-        private const string c_endpointName = "ReplicaEndpoint";
-        private readonly Uri m_serviceNameUri;
-        private readonly PartitionEndpointResolver m_partitionEndpointResolver;
+        private const string EndpointName = "ReplicaEndpoint";
+        private readonly Uri _serviceNameUri;
+        private readonly PartitionEndpointResolver _partitionEndpointResolver;
 
         internal ServiceOperations(PartitionEndpointResolver partitionEndpointResolver, Uri serviceNameUri)
         {
-            m_partitionEndpointResolver = partitionEndpointResolver;
-            m_serviceNameUri = serviceNameUri;
+            _partitionEndpointResolver = partitionEndpointResolver;
+            _serviceNameUri = serviceNameUri;
         }
 
         private InternetAuctionOperationProxy GetProxy(string email)
         {
             // Maps email to a partition key
             var partitionKey = Email.Parse(email).PartitionKey();
-            var resolver = m_partitionEndpointResolver.CreateSpecific(m_serviceNameUri.ToString(), partitionKey,
-                c_endpointName);
+            var resolver = _partitionEndpointResolver.CreateSpecific(_serviceNameUri.ToString(), partitionKey,
+                EndpointName);
             return new InternetAuctionOperationProxy(resolver);
         }
 
@@ -92,7 +92,7 @@ namespace SFAuction.Svc.Auction
             var qm = new FabricClient().QueryManager;
             // Get this service's partitions
             var partitions =
-                await qm.GetPartitionListAsync(m_serviceNameUri, null, TimeSpan.FromSeconds(4), cancellationToken);
+                await qm.GetPartitionListAsync(_serviceNameUri, null, TimeSpan.FromSeconds(4), cancellationToken);
 
             // Get each partition's low key
             var partitionKeys = from partition in partitions
@@ -102,7 +102,7 @@ namespace SFAuction.Svc.Auction
             var tasks = new List<Task<ItemInfo[]>>();
             foreach (var p in partitionKeys)
             {
-                var resolver = m_partitionEndpointResolver.CreateSpecific(m_serviceNameUri.ToString(), p, c_endpointName);
+                var resolver = _partitionEndpointResolver.CreateSpecific(_serviceNameUri.ToString(), p, EndpointName);
                 var proxy = new InternetAuctionOperationProxy(resolver);
                 tasks.Add(proxy.GetAuctionItemsAsync(cancellationToken));
             }
@@ -123,8 +123,8 @@ namespace SFAuction.Svc.Auction
             decimal bidAmount, CancellationToken cancellationToken)
         {
             var partitionKey = Email.Parse(sellerEmail).PartitionKey();
-            var resolver = m_partitionEndpointResolver.CreateSpecific(m_serviceNameUri.ToString(), partitionKey,
-                c_endpointName);
+            var resolver = _partitionEndpointResolver.CreateSpecific(_serviceNameUri.ToString(), partitionKey,
+                EndpointName);
             return new InternalAuctionOperationProxy(resolver).PlaceBid2Async(bidderEmail, sellerEmail, itemName,
                 bidAmount, cancellationToken);
         }

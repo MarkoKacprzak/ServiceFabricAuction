@@ -19,7 +19,7 @@ namespace SFAuction.Svc.Auction
     /// </summary>
     internal sealed class AuctionSvc : StatefulService
     {
-        private const string CReplicaEndpoint = "ReplicaEndpoint";
+        private const string ReplicaEndpoint = "ReplicaEndpoint";
         private static readonly JavaScriptSerializer SJsSerializer = new JavaScriptSerializer();
         private readonly string _mNodeIp = FabricRuntime.GetNodeContext().IPAddressOrFQDN;
         private PartitionOperations _mOperations;
@@ -50,12 +50,12 @@ namespace SFAuction.Svc.Auction
         /// <returns>The collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return new[] {new ServiceReplicaListener(CreateInternalListener, CReplicaEndpoint, false)};
+            return new[] {new ServiceReplicaListener(CreateInternalListener, ReplicaEndpoint, false)};
         }
 
         private ICommunicationListener CreateInternalListener(StatefulServiceContext context)
         {
-            var erd = context.GetEndpointResourceDescription(CReplicaEndpoint);
+            var erd = context.GetEndpointResourceDescription(ReplicaEndpoint);
             var uriPrefix = $"{erd.Protocol}://+:{erd.Port}/" + context.CalcUriSuffix();
             return new HttpCommunicationListener(uriPrefix, ProcessRequest);
         }

@@ -4,7 +4,7 @@
     this.isSuccess = false;
     this.errorMsg = null;
     this.returnResult = JSON.parse(retValue);
-    if(retValue.indexOf("result") != -1)
+    if(retValue.indexOf("result") !== -1)
     {
         this.isSuccess = true;
     }

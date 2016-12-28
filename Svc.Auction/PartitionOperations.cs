@@ -19,15 +19,15 @@ namespace SFAuction.Svc.Auction
 
         #region Infrastructure
 
-        private static readonly PartitionEndpointResolver SPartitionEndpointResolver
+        private static readonly PartitionEndpointResolver PartitionEndpointResolver
             = new PartitionEndpointResolver();
 
-        private readonly IReliableStateManager _mStateMgr;
-        private readonly IReliableDictionary<Email, UserInfo> _mUsers;
-        private readonly ReliableList<ItemId> _mUnexpiredItems;
+        private readonly IReliableStateManager _StateMgr;
+        private readonly IReliableDictionary<Email, UserInfo> _Users;
+        private readonly ReliableList<ItemId> _UnexpiredItems;
 
         private Task<IReliableDictionary<ItemId, ItemInfo>> GetSellerItemsAsync(Email sellerEmail) =>
-            _mStateMgr.GetOrAddAsync<IReliableDictionary<ItemId, ItemInfo>>("UserItems-" + sellerEmail.Key);
+            _StateMgr.GetOrAddAsync<IReliableDictionary<ItemId, ItemInfo>>("UserItems-" + sellerEmail.Key);
 
         internal static async Task<PartitionOperations> CreateAsync(IReliableStateManager stateManager)
         {
@@ -42,12 +42,12 @@ namespace SFAuction.Svc.Auction
             IReliableDictionary<Email, UserInfo> partitionUsers,
             ReliableList<ItemId> partitionUnexpiredItems)
         {
-            _mStateMgr = stateManager;
-            _mUsers = partitionUsers;
-            _mUnexpiredItems = partitionUnexpiredItems;
+            _StateMgr = stateManager;
+            _Users = partitionUsers;
+            _UnexpiredItems = partitionUnexpiredItems;
         }
 
-        private ITransaction CreateTransaction() => _mStateMgr.CreateTransaction();
+        private ITransaction CreateTransaction() => _StateMgr.CreateTransaction();
 
         #endregion
 
@@ -64,7 +64,7 @@ namespace SFAuction.Svc.Auction
                 var userInfo = new UserInfo(userEmailLocal);
                 try
                 {
-                    await _mUsers.AddAsync(tx, userEmailLocal, userInfo);
+                    await _Users.AddAsync(tx, userEmailLocal, userInfo);
                     await tx.CommitAsync();
                     return userInfo;
                 }
@@ -81,7 +81,7 @@ namespace SFAuction.Svc.Auction
             var userEmailLocal = Email.Parse(userEmail);
             using (var tx = CreateTransaction())
             {
-                var userInfo = await _mUsers.TryGetValueAsync(tx, userEmailLocal);
+                var userInfo = await _Users.TryGetValueAsync(tx, userEmailLocal);
                 if (userInfo.HasValue) return userInfo.Value;
                 throw new InvalidOperationException($"User '{userEmailLocal}' doesn't exist.");
             }
@@ -100,7 +100,7 @@ namespace SFAuction.Svc.Auction
             var sellerEmailLocal = Email.Parse(sellerEmail);
             using (var tx = CreateTransaction())
             {
-                var cr = await _mUsers.TryGetValueAsync(tx, sellerEmailLocal);
+                var cr = await _Users.TryGetValueAsync(tx, sellerEmailLocal);
                 if (!cr.HasValue)
                     throw new InvalidOperationException($"Seller '{sellerEmailLocal}' doesn't exist.");
 
@@ -119,7 +119,7 @@ namespace SFAuction.Svc.Auction
                     throw new InvalidOperationException(
                         $"Seller '{itemId.Seller}' is already selling '{itemId.ItemName}'.", ex);
                 }
-                await _mUnexpiredItems.AddAsync(tx, itemId);
+                await _UnexpiredItems.AddAsync(tx, itemId, cancellationToken: cancellationToken);
                 await tx.CommitAsync();
                 return item;
             }
@@ -139,7 +139,7 @@ namespace SFAuction.Svc.Auction
                 var _bidderEmail = Email.Parse(bidderEmail);
                 var itemId = ItemId.Parse(sellerEmailLocal, itemName);
 
-                var cr = await _mUsers.TryGetValueAsync(tx, _bidderEmail);
+                var cr = await _Users.TryGetValueAsync(tx, _bidderEmail);
                 if (!cr.HasValue) throw new InvalidOperationException($"Bidder '{_bidderEmail}' doesn't exist.");
 
                 // Create new User object identical to current with new itemId added to it (if not already in collection [idempotent])
@@ -147,7 +147,7 @@ namespace SFAuction.Svc.Auction
                 if (!userInfo.ItemsBidding.Contains(itemId))
                 {
                     userInfo = userInfo.AddItemBidding(itemId);
-                    await _mUsers.SetAsync(tx, _bidderEmail, userInfo);
+                    await _Users.SetAsync(tx, _bidderEmail, userInfo);
                     await tx.CommitAsync();
                 }
                 // NOTE: If we fail here, the bidder thinks they're bidding on an item but the 
@@ -155,7 +155,7 @@ namespace SFAuction.Svc.Auction
                 // The bidder could bid again (which is why adding the item is idempotent). 
             }
             // Tell seller's partition to place a bid
-            var proxy = (IInternalOperations) new ServiceOperations(SPartitionEndpointResolver, AuctionServiceNameUri);
+            var proxy = (IInternalOperations) new ServiceOperations(PartitionEndpointResolver, AuctionServiceNameUri);
             return await proxy.PlaceBid2Async(bidderEmail, sellerEmail, itemName, bidAmount, ct);
         }
 
@@ -172,7 +172,7 @@ namespace SFAuction.Svc.Auction
             {
                 var bidderEmailLocal = Email.Parse(bidderEmail);
                 var itemId = ItemId.Parse(sellerEmailLocal, itemName);
-                var isUnexpiredItem = await _mUnexpiredItems.ContainsAsync(tx, itemId, cancellationToken: ct);
+                var isUnexpiredItem = await _UnexpiredItems.ContainsAsync(tx, itemId, cancellationToken: ct);
                 if (!isUnexpiredItem)
                     throw new InvalidOperationException("Item's auction expired or item doesn't exist.");
 
@@ -243,7 +243,7 @@ namespace SFAuction.Svc.Auction
             var itemInfos = new List<ItemInfo>();
             using (var tx = CreateTransaction())
             {
-                var unexpiredItems = await _mUnexpiredItems.CreateEnumerableAsync(tx);
+                var unexpiredItems = await _UnexpiredItems.CreateEnumerableAsync(tx);
                 using (var enumerator = unexpiredItems.GetAsyncEnumerator())
                 {
                     while (await enumerator.MoveNextAsync(cancellationToken))
