@@ -57,6 +57,7 @@ namespace SFAuction.Svc.Auction
         /// </summary>
         public async Task<UserInfo> CreateUserAsync(string userEmail, CancellationToken cancellationToken)
         {
+            ServiceEventSource.Current.Message($"CreateUserAsync {userEmail}");
             // Create user and add to dictionary; fail if user already exists
             var userEmailLocal = Email.Parse(userEmail);
             using (var tx = CreateTransaction())
@@ -78,11 +79,16 @@ namespace SFAuction.Svc.Auction
 
         public async Task<UserInfo> GetUserAsync(string userEmail, CancellationToken cancellationToken)
         {
+            ServiceEventSource.Current.Message($"GetUserAsync {userEmail}");
             var userEmailLocal = Email.Parse(userEmail);
             using (var tx = CreateTransaction())
             {
                 var userInfo = await _Users.TryGetValueAsync(tx, userEmailLocal);
-                if (userInfo.HasValue) return userInfo.Value;
+                if (userInfo.HasValue)
+                {
+                    ServiceEventSource.Current.Message($"retValue: {userInfo.Value}");
+                    return userInfo.Value;
+                }
                 throw new InvalidOperationException($"User '{userEmailLocal}' doesn't exist.");
             }
         }
@@ -97,6 +103,8 @@ namespace SFAuction.Svc.Auction
             // NOTE: If items gets large, old item value (but not key) can move to warm storage
 
             // If user exists, create item & transactionally and it to user's items dictionary & unexpired items dictionary
+            ServiceEventSource.Current.Message($"CreateItemAsync: {sellerEmail} Name: {itemName} " +
+                                               $"Url: {imageUrl} Expiration: {expiration} Amount:{startAmount}");
             var sellerEmailLocal = Email.Parse(sellerEmail);
             using (var tx = CreateTransaction())
             {
@@ -133,6 +141,8 @@ namespace SFAuction.Svc.Auction
         public async Task<Bid[]> PlaceBidAsync(string bidderEmail, string sellerEmail, string itemName,
             decimal bidAmount, CancellationToken ct)
         {
+            ServiceEventSource.Current.Message($"PlaceBidAsync BidderEmail: {bidderEmail} Name: {itemName} " +
+                                               $"sellerEmail: {sellerEmail}");
             var sellerEmailLocal = Email.Parse(sellerEmail);
             using (var tx = CreateTransaction())
             {
@@ -166,6 +176,8 @@ namespace SFAuction.Svc.Auction
         public async Task<Bid[]> PlaceBid2Async(string bidderEmail, string sellerEmail, string itemName,
             decimal bidAmount, CancellationToken ct)
         {
+            ServiceEventSource.Current.Message($"PlaceBid2Async BidderEmail: {bidderEmail} Name: {itemName} " +
+                                               $"sellerEmail: {sellerEmail}");
             // This method executes on the seller's partition
             var sellerEmailLocal = Email.Parse(sellerEmail);
             using (var tx = CreateTransaction())
@@ -237,6 +249,7 @@ namespace SFAuction.Svc.Auction
         /// <returns></returns>
         public async Task<ItemInfo[]> GetAuctionItemsAsync(CancellationToken cancellationToken)
         {
+            ServiceEventSource.Current.Message($"GetAuctionItemsAsync");
             // Always shows unexpired items
             // Return items in each partition’s unexpired dictionary
             // Note: Some may be expired; can purge now or wait for GC, or UI can filter         

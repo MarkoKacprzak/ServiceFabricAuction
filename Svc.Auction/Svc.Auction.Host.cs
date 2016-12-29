@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using Microsoft.Diagnostics.Tracing.Session;
 using Microsoft.ServiceFabric.Services.Runtime;
 
 namespace SFAuction.Svc.Auction
@@ -21,11 +22,15 @@ namespace SFAuction.Svc.Auction
 
                 ServiceRuntime.RegisterServiceAsync("AuctionSvcType",
                     context => new AuctionSvc(context)).GetAwaiter().GetResult();
-
-                ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(AuctionSvc).Name);
-
-                // Prevents this host process from terminating so services keep running.
-                Thread.Sleep(Timeout.Infinite);
+                using (var session = new TraceEventSession("MySession2", GlobalName.FileName))
+                {
+                    session.StopOnDispose = true;
+                    session.EnableProvider(GlobalName.ProviderName);
+                    ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id,
+                        typeof(AuctionSvc).Name);  
+                    // Prevents this host process from terminating so services keep running.
+                    Thread.Sleep(Timeout.Infinite);
+                }
             }
             catch (Exception e)
             {
