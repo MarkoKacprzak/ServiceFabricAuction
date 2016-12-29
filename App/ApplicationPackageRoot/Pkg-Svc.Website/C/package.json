@@ -1,0 +1,29 @@
+{
+  "name": "auction",
+  "version": "1.0.0",
+  "description": "Auction",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarkoKacprzak/ServiceFabricAuction.git"
+  },
+  "keywords": [
+    "Auction",
+    "Service",
+    "Fabric"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MarkoKacprzak/ServiceFabricAuction/issues"
+  },
+  "homepage": "https://github.com/MarkoKacprzak/ServiceFabricAuction#readme",
+  "dependencies": {
+    "bunyan": "^1.8.5",
+    "bunyan-seq": "^0.1.5"
+  }
+}

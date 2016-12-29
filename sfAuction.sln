@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Management", "Libraries\Man
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Richter.Utilities", "Libraries\Richter.Utilities\Richter.Utilities.csproj", "{540340E8-5A79-4574-8A72-180362E9DF59}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogSender", "LogSender\LogSender.csproj", "{37AE2EBA-6329-45C1-ACC2-0716759604DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +88,14 @@ Global
 		{540340E8-5A79-4574-8A72-180362E9DF59}.Release|Any CPU.Build.0 = Release|Any CPU
 		{540340E8-5A79-4574-8A72-180362E9DF59}.Release|x64.ActiveCfg = Release|Any CPU
 		{540340E8-5A79-4574-8A72-180362E9DF59}.Release|x64.Build.0 = Release|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Debug|x64.Build.0 = Debug|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Release|x64.ActiveCfg = Release|Any CPU
+		{37AE2EBA-6329-45C1-ACC2-0716759604DF}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

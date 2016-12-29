@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.Diagnostics.Tracing.Session;
 using Microsoft.ServiceFabric.Services.Runtime;
 
 namespace SFAuction.Svc.Auction
@@ -22,15 +21,34 @@ namespace SFAuction.Svc.Auction
 
                 ServiceRuntime.RegisterServiceAsync("AuctionSvcType",
                     context => new AuctionSvc(context)).GetAwaiter().GetResult();
+                /*
+                Log.Logger = new LoggerConfiguration()
+                    .WriteTo.ColoredConsole()
+                    .WriteTo.Seq("http://localhost:5341")
+                    .CreateLogger();
+                Log.Information("Hello, {Name}!", Environment.UserName);
+                */
+                /*
                 using (var session = new TraceEventSession("MySession2", GlobalName.FileName))
                 {
-                    session.StopOnDispose = true;
                     session.EnableProvider(GlobalName.ProviderName);
+                    session.Source.Kernel.ProcessStart += delegate(ProcessTraceData data)
+                    {
+                        Log.Information($"{data.ProcessName},{data.CommandLine}");
+                    };
+                    session.EnableKernelProvider(KernelTraceEventParser.Keywords.Process);
+                    session.Source.Process();
                     ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id,
-                        typeof(AuctionSvc).Name);  
+                        typeof(AuctionSvc).Name);
+
                     // Prevents this host process from terminating so services keep running.
                     Thread.Sleep(Timeout.Infinite);
                 }
+                */
+                ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id,
+                           typeof(AuctionSvc).Name);
+                ServiceEventSource.Current.Message("Hello from AuctionSvc");
+                Thread.Sleep(Timeout.Infinite);
             }
             catch (Exception e)
             {

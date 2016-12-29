@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.Diagnostics.Tracing.Session;
 using Microsoft.ServiceFabric.Services.Runtime;
 
 namespace SFAuction.Svc.ApiGateway
@@ -19,21 +18,24 @@ namespace SFAuction.Svc.ApiGateway
 
                 ServiceRuntime.RegisterServiceAsync("ApiGatewaySvcType",
                     context => new ApiGatewaySvc(context)).GetAwaiter().GetResult();
+                /*
                 using (var session = new TraceEventSession("MySession1", GlobalName.FileName))
                 {
-                    session.StopOnDispose = true;
                     session.EnableProvider(GlobalName.ProviderName);
+                    session.Source.Kernel.ProcessStart += delegate (ProcessTraceData data)
+                    {
+                        Log.Information($"{data.ProcessName},{data.CommandLine}");
+                    };
+                    session.EnableKernelProvider(KernelTraceEventParser.Keywords.Process);
+                    session.Source.Process();
+
                     ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id,
                         typeof(ApiGatewaySvc).Name);
-                    // Today you have to be Admin to turn on ETW events (anyone can write ETW events).   
-                    if (!(TraceEventSession.IsElevated() ?? false))
-                    {
-                        ServiceEventSource.Current.Message("TraceEventSession.IsElevated() error");
-                        Console.WriteLine(
-                            "To turn on ETW events you need to be Administrator, please run from an Admin process.");
-                    }
                 }
-                ServiceEventSource.Current.Message("Hello from etw");
+                */
+                ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id,
+                    typeof(ApiGatewaySvc).Name);
+                ServiceEventSource.Current.Message("Hello from ApiGatewaySvc");
                 // Prevents this host process from terminating so services keep running.
                 Thread.Sleep(Timeout.Infinite);
             }
