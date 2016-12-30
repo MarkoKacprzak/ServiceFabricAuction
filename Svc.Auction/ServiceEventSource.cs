@@ -6,7 +6,7 @@ using Microsoft.ServiceFabric.Services.Runtime;
 namespace SFAuction.Svc.Auction
 {
     [EventSource(Name = GlobalName.ProviderName)]
-    internal sealed class ServiceEventSource : EventSource
+    public sealed class ServiceEventSource : EventSource
     {
         public static readonly ServiceEventSource Current = new ServiceEventSource();
 
