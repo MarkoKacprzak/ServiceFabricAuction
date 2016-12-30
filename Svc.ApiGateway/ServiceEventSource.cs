@@ -5,7 +5,7 @@ using Microsoft.ServiceFabric.Services.Runtime;
 
 namespace SFAuction.Svc.ApiGateway {
     [EventSource(Name = GlobalName.ProviderName)]
-    public sealed class ServiceEventSource : EventSource {
+    internal sealed class ServiceEventSource : EventSource {
       public static readonly ServiceEventSource Current = new ServiceEventSource();
 
       static ServiceEventSource() {
