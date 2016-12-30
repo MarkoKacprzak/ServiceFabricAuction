@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Session;
 using Serilog;
@@ -55,54 +57,67 @@ namespace LogSender
                 _activeSession.Source.Dynamic.AddCallbackForProviderEvent(
                     ProviderName,
                     methodInfo.Name,
-                    delegate(TraceEvent trace)
-                    {
-                        LogLevel(methodInfo, trace);
-                    });
+                    LogLevel);
             }
+            /// <summary>
+            /// Gets the default parameter for Enricher logger.
+            /// </summary>
+            /// <param name="trace">The trace.</param>
+            /// <returns></returns>
+            private static Dictionary<string, object> GetDefaultParam(TraceEvent trace)
+            {
+                var values = new Dictionary<string, object>();
+                var delay = (DateTime.Now - trace.TimeStamp).TotalSeconds;
+                values.Add("PID", trace.ProcessID);
+                values.Add("TaskName", trace.TaskName);
+                values.Add("ProviderName", trace.ProviderName);
+                values.Add("Delay", delay);
+                values.Add("TimeStamp", trace.TimeStamp);
+                trace.PayloadNames.ToList().ForEach(name =>
+                {
+                    //stringBuilder.Append("{" + a.Name + "};");
+                    values.Add(name, trace.PayloadByName(name));
+                });
+                return values;
+            }
+
             /// <summary>
             /// Translate each method in EvenSource (as a event type) into SeriLog coresponding level
             /// TraceEvent PayloadByName give a value from match method name
             /// </summary>
-            /// <param name="methodInfo">The method information from EventSource type</param>
             /// <param name="trace">The trace event log from ETL.</param>
             /// <exception cref="System.ArgumentOutOfRangeException">level - null</exception>
-            private void LogLevel(MethodInfo methodInfo, TraceEvent trace)
+            private static void LogLevel(TraceEvent trace)
             {
-                var level=GetAttributeVaue< EventAttribute>(methodInfo).Level;
-                var stringBuilder = new StringBuilder();
-                var values = new ArrayList();
-                methodInfo.GetParameters().ToList().ForEach(a =>
+                var values = GetDefaultParam(trace);
+                var message = trace.FormattedMessage;
+                switch (trace.Level)
                 {
-                    stringBuilder.Append("{" + a.Name + "}");
-                    values.Add(trace.PayloadByName(a.Name));
-                });
-                var message = stringBuilder.ToString();
-                switch (level)
-                {
-                    case EventLevel.LogAlways:
-                        Log.Verbose(message, values);
+                    case TraceEventLevel.Always:
+                        EnrichLog(values).Verbose(message);
                         break;
-                    case EventLevel.Critical:
-                        Log.Fatal(message, values);
+                    case TraceEventLevel.Critical:
+                        EnrichLog(values).Fatal(message);
                         break;
-                    case EventLevel.Error:
-                        Log.Error(message, values);
+                    case TraceEventLevel.Error:
+                        EnrichLog(values).Error(message);
                         break;
-                    case EventLevel.Warning:
-                        Log.Warning(message, values);
+                    case TraceEventLevel.Warning:
+                        EnrichLog(values).Warning(message);
                         break;
-                    case EventLevel.Informational:
-                        Log.Information(message, values);
+                    case TraceEventLevel.Informational:
+                        EnrichLog(values).Information(message);
                         break;
-                    case EventLevel.Verbose:
-                        Log.Verbose(message, values);
+                    case TraceEventLevel.Verbose:
+                       EnrichLog(values).Verbose(message);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(level), level, null);
+                        throw new ArgumentOutOfRangeException();
                 }
             }
         }
+
+        private static ILogger EnrichLog(Dictionary<string, object> dict) => Log.ForContext(new EtlEnricher(dict));            
 
         /// <summary>
         /// Translate each EventSource Event definition into corresponding callback into serilog logger

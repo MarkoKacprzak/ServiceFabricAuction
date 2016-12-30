@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.Tracing;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Session;
 using Serilog;
 
@@ -24,46 +19,33 @@ namespace LogSender
             {
                 ConfigureSerilog();
                 // create a real time user mode session
-                using (var session = new TraceEventSession("ApiGateway-AuctionETWSender"))
+                using (var session = new TraceEventSession("Auction"))
                 {
                     Log.Information("Startig ETW collector with sending to Seq server as a log");
-
-                    /*
-                     var toCheckAssembly = new List<Assembly>();
-                     args.Select(
-                         param => Directory.EnumerateFiles(
-                             path, 
-                             $"*{param}", 
-                             SearchOption.AllDirectories)
-                             .ToList()
-                             .FirstOrDefault())
-                             .Where(found => found != null)
-                             .ToList()
-                             .ForEach(name=> toCheckAssembly.Add(
-                                 Assembly.LoadFile(name)));
-
-                    var path =
-                      Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                    var a = new List<Assembly>
-                    {
-                        Assembly.LoadFile(Path.Combine(path, @"..\..\..\Svc.ApiGateway\bin\debug\SFAuction.Svc.ApiGateway.exe")),
-                        Assembly.LoadFile(Path.Combine(path, @"..\..\..\Svc.Auction\bin\debug\SFAuction.Svc.Auction.exe"))
-                    };
                     
-                    a
-                        .ToList()
-                        .ForEach(asm =>
-                         asm.GetTypes()
-                        .Where(t => t.BaseType == typeof(EventSource))
-                        .Where(t => Attribute.IsDefined(t, typeof(EventSourceAttribute)))
-                        .ToList()
-                        .ForEach(t =>
-                        {
-                            typeof(EtlListenerLog).GetMethod("Register").MakeGenericMethod(t).Invoke(null, new object[] { session });
-                        }));
-                    */
                     EtlListenerLog.Register<SFAuction.Svc.ApiGateway.ServiceEventSource>(session);
                     EtlListenerLog.Register<SFAuction.Svc.Auction.ServiceEventSource>(session);
+
+                    /* Uncoment if want to log all ETL
+                    session.Source.Dynamic.All+=delegate (TraceEvent data)
+                      {
+                            // ETW buffers events and only delivers them after buffering up for some amount of time.  Thus 
+                            // there is a small delay of about 2-4 seconds between the timestamp on the event (which is very 
+                            // accurate), and the time we actually get the event.  We measure that delay here.     
+                            var delay = (DateTime.Now - data.TimeStamp).TotalSeconds;
+                          Log.Error($"{data.ToString( )} delay:{delay}");
+                      };
+                      */
+                    session.Source.UnhandledEvents += delegate (TraceEvent data)
+                    {
+                        if ((int) data.ID != 0xFFFE)
+                            // The EventSource manifest events show up as unhanded, filter them out.
+                        {
+                            var delay = (DateTime.Now - data.TimeStamp).TotalSeconds;
+                            Log.Error($"{data.Dump()} delay:{delay}");
+                        }
+                    };
+
                     if (!(TraceEventSession.IsElevated() ?? false))
                     {
                         Log.Error(
@@ -80,11 +62,11 @@ namespace LogSender
             }
             finally
             {
+                Log.Information("Closing ETW collector");
                 Serilog.Log.CloseAndFlush();
             }
             return 0;
         }
-        private static ILogger Log => Serilog.Log.Logger;
         
 
         /// <summary>
@@ -93,8 +75,10 @@ namespace LogSender
         static void ConfigureSerilog()
         {
             Serilog.Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
                 .Enrich.WithProperty(nameof(GlobalVariable.Environment), GlobalVariable.Environment)
-                        .WriteTo.ColoredConsole()
+               // .Enrich.FromLogContext()
+                .WriteTo.ColoredConsole()
                         .WriteTo.Seq(GlobalVariable.SeqAddress)
                         .WriteTo.Trace()
                         .CreateLogger();

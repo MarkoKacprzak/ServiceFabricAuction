@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Browser Bunyan Examples</title>
+    <script src="../dist/browser-bunyan.js"></script>
+</head>
+<body>
+    <h1>Browser Bunyan examples</h1>
+    <p>Look in your console to see this code run:</p>
+    <div style="font-family: Consolas, 'courier new', monospace; font-size: 12px"><pre id="codeHolder"></pre></div>
+
+    <script id="code">
+
+        var rawLogger = bunyan.createLogger({
+            name: 'raw',
+            src: true,
+            streams: [
+                {
+                    level: 'trace',
+                    stream: new bunyan.ConsoleRawStream(),
+
+                }
+            ]
+        });
+
+        var err = new Error('Example Error');
+        var obj = { x: 1, y: { z: function() { return 'foo'}} };
+
+        rawLogger.trace('This is a %s log using a %s stream', 'trace', 'raw');
+        rawLogger.debug('This is a %s log using a %s stream', 'debug', 'raw');
+        rawLogger.info('This is an %s log using a %s stream', 'info', 'raw');
+        rawLogger.warn('This is a %s log using a %s stream', 'warn', 'raw');
+        rawLogger.error('This is an %s log using a %s stream', 'error', 'raw');
+        rawLogger.fatal('This is a %s log using a %s stream', 'fatal', 'raw');
+        rawLogger.error(err, 'This is an %s log with an error object using a %s stream', 'error', 'raw');
+        rawLogger.fatal(err, 'This is a %s log with an error object using a %s stream', 'fatalgul', 'raw');
+        rawLogger.info(obj, 'This is an %s log with an object using a %s stream', 'info', 'raw');
+
+        var formattedLogger = bunyan.createLogger({
+            name: 'formatted',
+            streams: [
+                {
+                    level: 'trace',
+                    stream: new bunyan.ConsoleFormattedStream({
+                        logByLevel: false
+                    }),
+
+                }
+            ],
+            serializers: bunyan.stdSerializers,
+            src: true
+        });
+
+        formattedLogger.trace('This is a %s log using a %s stream', 'trace', 'formatted');
+        formattedLogger.debug('This is a %s log using a %s stream', 'debug', 'formatted');
+        formattedLogger.info('This is an %s log using a %s stream', 'info', 'formatted');
+        formattedLogger.warn('This is a %s log using a %s stream', 'warn', 'formatted');
+        formattedLogger.error('This is a %s log using a %s stream', 'error', 'formatted');
+        formattedLogger.fatal('This is a %s log using a %s stream', 'fatal', 'formatted');
+        formattedLogger.error(err, 'This is an %s log with an error object using a %s stream', 'error', 'formatted');
+        formattedLogger.fatal(err, 'This is a %s log  with an error object using a %s stream', 'fatal', 'formatted');
+        formattedLogger.info({ obj: obj }, 'This is an %s log with an object using a %s stream', 'info', 'formatted');
+
+    </script>
+    <script>
+        (function() {
+            var code = document.getElementById('code').innerHTML;
+            document.getElementById('codeHolder').innerHTML = code;
+        })();
+    </script>
+</body>
+</html>

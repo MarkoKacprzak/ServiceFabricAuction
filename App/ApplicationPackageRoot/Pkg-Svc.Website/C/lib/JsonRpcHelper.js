@@ -42,20 +42,36 @@ var JsonRpcHelper = function (url) {
         };
         var requestString = JSON.stringify(this.request);
         var jsonRpcRequest = "jsonrpc=" + requestString;
+        /*
+        log.info({
+            url: hostUrl,
+            data: this.request,
+            type: requestType
+        });
+        */
         $.ajax({
             url: hostUrl,
             data: jsonRpcRequest,
             type: requestType,
             success: function (retValue) {
                 var rpcResultHelper = new JsonRpcHelperResult(retValue);
-                if (rpcResultHelper.isSuccessResponse())
-                    responseSuccessCallBack(rpcResultHelper.getResult());
-                else
-                {
+                if (rpcResultHelper.isSuccessResponse()) {
+                    var rpcResult = rpcResultHelper.getResult();
+                    /*
+                    log.info({
+                        'jsonrpc': versionNumber,
+                        'method': methodName,
+                        'id': requestId,
+                        'Result': rpcResult
+                    });
+                    */
+                    responseSuccessCallBack(rpcResult);
+                } else {
                     var error = rpcResultHelper.getErrorMsg();
+                    log.error(error);
                     alert(error);
                 }
-             }
+            }
         });
     }
 }

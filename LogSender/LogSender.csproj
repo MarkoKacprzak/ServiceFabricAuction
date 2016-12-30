@@ -85,6 +85,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EtlEnricher.cs" />
     <Compile Include="EtlListenerLog.cs" />
     <Compile Include="GlobalVariable.cs" />
     <Compile Include="Program.cs" />

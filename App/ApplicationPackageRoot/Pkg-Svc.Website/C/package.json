@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/MarkoKacprzak/ServiceFabricAuction#readme",
   "dependencies": {
+    "browser-bunyan": "^0.4.0",
     "bunyan": "^1.8.5",
     "bunyan-seq": "^0.1.5"
   }

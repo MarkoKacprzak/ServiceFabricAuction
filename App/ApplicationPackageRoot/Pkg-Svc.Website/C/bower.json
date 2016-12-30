@@ -1,0 +1,25 @@
+{
+  "name": "auction",
+  "description": "Auction",
+  "main": "server.js",
+  "authors": [
+    "marek kacprzak <marek.kacprzak@windowslive.com>"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "Auction",
+    "Service",
+    "Fabric"
+  ],
+  "homepage": "https://github.com/MarkoKacprzak/ServiceFabricAuction",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "browser-bunyan": "^0.4.0"
+  }
+}

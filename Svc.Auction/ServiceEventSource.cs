@@ -146,25 +146,80 @@ namespace SFAuction.Svc.Auction
         // and other statistics.
         private const int ServiceRequestStartEventId = 5;
 
-        [Event(ServiceRequestStartEventId, Level = EventLevel.Informational, Message = "Service request '{0}' started",
+        [Event(ServiceRequestStartEventId, Level = EventLevel.Informational, Message = "Service request {0} started",
              Keywords = Keywords.Requests)]
         public void ServiceRequestStart(string requestTypeName) =>
             WriteEvent(ServiceRequestStartEventId, requestTypeName);
 
         private const int ServiceRequestStopEventId = 6;
 
-        [Event(ServiceRequestStopEventId, Level = EventLevel.Informational, Message = "Service request '{0}' finished",
+        [Event(ServiceRequestStopEventId, Level = EventLevel.Informational, Message = "Service request {0} finished",
              Keywords = Keywords.Requests)]
         public void ServiceRequestStop(string requestTypeName) =>
             WriteEvent(ServiceRequestStopEventId, requestTypeName);
 
         private const int ServiceRequestFailedEventId = 7;
 
-        [Event(ServiceRequestFailedEventId, Level = EventLevel.Error, Message = "Service request '{0}' failed",
+        [Event(ServiceRequestFailedEventId, Level = EventLevel.Error, Message = "Service request {0} failed",
              Keywords = Keywords.Requests)]
         public void ServiceRequestFailed(string requestTypeName, string exception) =>
             WriteEvent(ServiceRequestFailedEventId, exception);
 
+        private const int ServiceCreateUserEventId = 8;
+
+        [Event(ServiceCreateUserEventId, Level = EventLevel.Verbose, Message = "CreateUserAsync {0}",
+             Keywords = Keywords.Requests)]
+        public void CreateUserAsync(string userEmail) =>
+            WriteEvent(ServiceCreateUserEventId, userEmail);
+
+        private const int ServiceGetUserEventId = 9;
+
+        [Event(ServiceGetUserEventId, Level = EventLevel.Verbose, Message = "GetUserAsync {0}",
+             Keywords = Keywords.Requests)]
+        public void GetUserAsync(string userEmail) =>
+            WriteEvent(ServiceGetUserEventId, userEmail);
+
+        private const int ServiceCreateItemEventId = 10;
+
+        [Event(ServiceCreateItemEventId, Level = EventLevel.Verbose, Message = "CreateItemAsync {3}",
+             Keywords = Keywords.Requests)]
+        public void CreateItemAsync(string sellerEmail, string imageUrl, DateTime expiration, string startAmount) =>
+            WriteEvent(ServiceCreateItemEventId, sellerEmail, imageUrl, expiration, startAmount);
+
+        private const int ServicePlaceBidEventId = 11;
+
+        [Event(ServicePlaceBidEventId, Level = EventLevel.Verbose, Message = "PlaceBidAsync {2}",
+             Keywords = Keywords.Requests)]
+        public void PlaceBidAsync(string bidderEmail, string sellerEmail, string itemName) =>
+            WriteEvent(ServicePlaceBidEventId, bidderEmail, sellerEmail, itemName);
+
+        private const int ServiceGetItemsBiddingEventId = 12;
+
+        [Event(ServiceGetItemsBiddingEventId, Level = EventLevel.Verbose, Message = "PlaceBidAsync {0}",
+             Keywords = Keywords.Requests)]
+        public void GetItemsBiddingAsync(string userEmail) =>
+            WriteEvent(ServiceGetItemsBiddingEventId, userEmail);
+
+        private const int ServiceGetItemsSellingEventId = 13;
+
+        [Event(ServiceGetItemsSellingEventId, Level = EventLevel.Verbose, Message = "GetItemsSellingAsync {0}",
+             Keywords = Keywords.Requests)]
+        public void GetItemsSellingAsync(string userEmail) =>
+            WriteEvent(ServiceGetItemsSellingEventId, userEmail);
+
+        private const int ServiceGetAuctionItemsEventId = 14;
+
+        [Event(ServiceGetAuctionItemsEventId, Level = EventLevel.Verbose, Message = "GetAuctionItemsAsync",
+             Keywords = Keywords.Requests)]
+        public void GetAuctionItemsAsync() =>
+            WriteEvent(ServiceGetAuctionItemsEventId);
+
+        private const int ServicePlaceBid2EventId = 15;
+
+        [Event(ServicePlaceBid2EventId, Level = EventLevel.Verbose, Message = "GetAuctionItemsAsync {2}",
+             Keywords = Keywords.Requests)]
+        public void PlaceBid2Async(string bidderEmail, string sellerEmail, string itemName, string bidAmount) =>
+            WriteEvent(ServicePlaceBid2EventId, bidderEmail, sellerEmail, itemName, bidAmount);
         #endregion
 
         #region Private methods

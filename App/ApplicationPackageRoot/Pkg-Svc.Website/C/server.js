@@ -5,7 +5,7 @@ var bunyan = require('bunyan');
 var seq = require('bunyan-seq');
 
 var log = bunyan.createLogger({
-    name: 'myapp',
+    name: 'Auction',
     streams: [
         {
             stream: process.stdout,

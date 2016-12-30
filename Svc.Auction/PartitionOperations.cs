@@ -1,12 +1,11 @@
 ﻿//#define Version1
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
-using Microsoft.ServiceFabric.Services.Client;
 using SFAuction.Common;
 using Richter.Utilities;
-using SFAuction.OperationsProxy;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,7 +56,7 @@ namespace SFAuction.Svc.Auction
         /// </summary>
         public async Task<UserInfo> CreateUserAsync(string userEmail, CancellationToken cancellationToken)
         {
-            ServiceEventSource.Current.Message($"CreateUserAsync {userEmail}");
+            ServiceEventSource.Current.CreateUserAsync(userEmail);
             // Create user and add to dictionary; fail if user already exists
             var userEmailLocal = Email.Parse(userEmail);
             using (var tx = CreateTransaction())
@@ -79,7 +78,7 @@ namespace SFAuction.Svc.Auction
 
         public async Task<UserInfo> GetUserAsync(string userEmail, CancellationToken cancellationToken)
         {
-            ServiceEventSource.Current.Message($"GetUserAsync {userEmail}");
+            ServiceEventSource.Current.GetUserAsync(userEmail);
             var userEmailLocal = Email.Parse(userEmail);
             using (var tx = CreateTransaction())
             {
@@ -103,8 +102,7 @@ namespace SFAuction.Svc.Auction
             // NOTE: If items gets large, old item value (but not key) can move to warm storage
 
             // If user exists, create item & transactionally and it to user's items dictionary & unexpired items dictionary
-            ServiceEventSource.Current.Message($"CreateItemAsync: {sellerEmail} Name: {itemName} " +
-                                               $"Url: {imageUrl} Expiration: {expiration} Amount:{startAmount}");
+            ServiceEventSource.Current.CreateItemAsync(sellerEmail, imageUrl, expiration, startAmount.ToString(CultureInfo.InvariantCulture));
             var sellerEmailLocal = Email.Parse(sellerEmail);
             using (var tx = CreateTransaction())
             {
@@ -141,23 +139,22 @@ namespace SFAuction.Svc.Auction
         public async Task<Bid[]> PlaceBidAsync(string bidderEmail, string sellerEmail, string itemName,
             decimal bidAmount, CancellationToken ct)
         {
-            ServiceEventSource.Current.Message($"PlaceBidAsync BidderEmail: {bidderEmail} Name: {itemName} " +
-                                               $"sellerEmail: {sellerEmail}");
+            ServiceEventSource.Current.PlaceBidAsync(bidderEmail, sellerEmail, itemName);
             var sellerEmailLocal = Email.Parse(sellerEmail);
             using (var tx = CreateTransaction())
             {
-                var _bidderEmail = Email.Parse(bidderEmail);
+                var bidderEmailParsed = Email.Parse(bidderEmail);
                 var itemId = ItemId.Parse(sellerEmailLocal, itemName);
 
-                var cr = await _Users.TryGetValueAsync(tx, _bidderEmail);
-                if (!cr.HasValue) throw new InvalidOperationException($"Bidder '{_bidderEmail}' doesn't exist.");
+                var cr = await _Users.TryGetValueAsync(tx, bidderEmailParsed);
+                if (!cr.HasValue) throw new InvalidOperationException($"Bidder '{bidderEmailParsed}' doesn't exist.");
 
                 // Create new User object identical to current with new itemId added to it (if not already in collection [idempotent])
                 var userInfo = cr.Value;
                 if (!userInfo.ItemsBidding.Contains(itemId))
                 {
                     userInfo = userInfo.AddItemBidding(itemId);
-                    await _Users.SetAsync(tx, _bidderEmail, userInfo);
+                    await _Users.SetAsync(tx, bidderEmailParsed, userInfo);
                     await tx.CommitAsync();
                 }
                 // NOTE: If we fail here, the bidder thinks they're bidding on an item but the 
@@ -176,8 +173,7 @@ namespace SFAuction.Svc.Auction
         public async Task<Bid[]> PlaceBid2Async(string bidderEmail, string sellerEmail, string itemName,
             decimal bidAmount, CancellationToken ct)
         {
-            ServiceEventSource.Current.Message($"PlaceBid2Async BidderEmail: {bidderEmail} Name: {itemName} " +
-                                               $"sellerEmail: {sellerEmail}");
+            ServiceEventSource.Current.PlaceBid2Async(bidderEmail, sellerEmail, itemName, bidAmount.ToString(CultureInfo.InvariantCulture));
             // This method executes on the seller's partition
             var sellerEmailLocal = Email.Parse(sellerEmail);
             using (var tx = CreateTransaction())
@@ -220,6 +216,7 @@ namespace SFAuction.Svc.Auction
         /// <returns></returns>
         public Task<ItemInfo[]> GetItemsBiddingAsync(string userEmail, CancellationToken cancellationToken)
         {
+            ServiceEventSource.Current.GetItemsBiddingAsync(userEmail);
             // If user doesn’t exist, fail
             // For each item bidding, look up item & return bids
             // Note: user may not have a bid due to network failure or bid didn’t pass tests
@@ -237,6 +234,7 @@ namespace SFAuction.Svc.Auction
         /// <returns></returns>
         public Task<ItemInfo[]> GetItemsSellingAsync(string userEmail, CancellationToken cancellationToken)
         {
+            ServiceEventSource.Current.GetItemsSellingAsync(userEmail);
             // If user doesn’t exist, fail
             // For each item in per-user dictionary, return items
             return null;
@@ -249,7 +247,7 @@ namespace SFAuction.Svc.Auction
         /// <returns></returns>
         public async Task<ItemInfo[]> GetAuctionItemsAsync(CancellationToken cancellationToken)
         {
-            ServiceEventSource.Current.Message($"GetAuctionItemsAsync");
+            ServiceEventSource.Current.GetAuctionItemsAsync();
             // Always shows unexpired items
             // Return items in each partition’s unexpired dictionary
             // Note: Some may be expired; can purge now or wait for GC, or UI can filter         
